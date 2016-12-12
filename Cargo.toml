@@ -1,0 +1,9 @@
+[package]
+name = "intmap"
+version = "0.1.0"
+authors = ["Jesper Axelsson <jesperaxe@gmail.com>"]
+
+[dependencies]
+
+[dev-dependencies]
+rand = "0.3"

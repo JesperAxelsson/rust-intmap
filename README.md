@@ -16,6 +16,10 @@ test tests::u64_insert_intmap   ... bench:      28,419 ns/iter (+/- 983)
 Simple example. 
 
 ````rust
+extern crate intmap;
+
+use intmap::IntMap;
+
 let mut map = IntMap::new();
 
 for i in 0..20_000 {

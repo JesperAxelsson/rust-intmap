@@ -11,3 +11,14 @@ test tests::u64_get_intmap      ... bench:       1,099 ns/iter (+/- 136)
 test tests::u64_insert_built_in ... bench:      64,717 ns/iter (+/- 2,830)
 test tests::u64_insert_intmap   ... bench:      28,419 ns/iter (+/- 983)
 ````
+
+# How to use
+Simple example. 
+
+````rust
+let mut map = IntMap::new();
+
+for i in 0..20_000 {
+    map.insert(i, format!("item: {:?}", i));
+}
+````

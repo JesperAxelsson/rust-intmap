@@ -1,6 +1,6 @@
-#![feature(test)]
+
 extern crate rand;
-extern crate test;
+
 extern crate intmap;
 
 use intmap::IntMap;
@@ -37,42 +37,30 @@ mod tests {
         println!("Starting test");
 
         for s in data.iter() {
-            test::black_box({
-                assert!(map.insert(*s, *s), "intmap insert failed! ix: {:?}", s);
-            });
+            assert!(map.insert(*s, *s), "intmap insert failed! ix: {:?}", s);
         }
 
         assert_eq!(map.count(), count);
         assert!(map.assert_count());
 
         for s in data.iter() {
-            test::black_box({
-                // println!("Testing key: {:?}", s);
-                assert_eq!(*map.get(*s).unwrap(), *s, "intmap get failed! key: {:?}", s);
-            });
+            assert_eq!(*map.get(*s).unwrap(), *s, "intmap get failed! key: {:?}", s);
         }
 
         assert_eq!(map.count(), count);
 
         for s in data.iter() {
-            test::black_box({
-                // println!("Testing key: {:?}", s);
-                assert!(map.contains_key(*s), "intmap contains_key failed! key: {:?}", s);
-            });
+            assert!(map.contains_key(*s), "intmap contains_key failed! key: {:?}", s);
         }
 
         assert_eq!(map.count(), count);
 
         for s in data.iter() {
-            test::black_box({
-                // println!("Testing key: {:?}", s);
-                let val = map.remove(*s).unwrap();
-                assert_eq!(val, *s, "intmap remove failed! key: {:?}", s);
-            });
+            let val = map.remove(*s).unwrap();
+            assert_eq!(val, *s, "intmap remove failed! key: {:?}", s);
         }
 
         assert_eq!(map.count(), 0);
         assert!(map.assert_count());
-        
     }
 }

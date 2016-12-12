@@ -40,27 +40,27 @@ mod tests {
             assert!(map.insert(*s, *s), "intmap insert failed! ix: {:?}", s);
         }
 
-        assert_eq!(map.count(), count);
+        assert_eq!(map.len(), count);
         assert!(map.assert_count());
 
         for s in data.iter() {
             assert_eq!(*map.get(*s).unwrap(), *s, "intmap get failed! key: {:?}", s);
         }
 
-        assert_eq!(map.count(), count);
+        assert_eq!(map.len(), count);
 
         for s in data.iter() {
             assert!(map.contains_key(*s), "intmap contains_key failed! key: {:?}", s);
         }
 
-        assert_eq!(map.count(), count);
+        assert_eq!(map.len(), count);
 
         for s in data.iter() {
             let val = map.remove(*s).unwrap();
             assert_eq!(val, *s, "intmap remove failed! key: {:?}", s);
         }
 
-        assert_eq!(map.count(), 0);
+        assert_eq!(map.len(), 0);
         assert!(map.assert_count());
     }
 

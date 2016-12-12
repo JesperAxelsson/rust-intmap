@@ -243,12 +243,12 @@ impl<V> IntMap<V> {
 
     /// Number of elements in map.
     ///
-    pub fn count(&self) -> u64 {
-        self.count as u64
+    pub fn len(&self) -> usize {
+        self.count as usize
     }
 
 
-    /// Number of slots filled.
+    /// Force count number of slots filled.
     ///
     pub fn load(&self) -> u64 {
         let mut count = 0;

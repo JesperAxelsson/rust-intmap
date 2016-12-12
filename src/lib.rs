@@ -67,7 +67,6 @@ impl<V> IntMap<V> {
         let ref mut vals = self.cache[ix];
         for ref kv in vals.iter() {
             if kv.key == key {
-                println!("Found duplicate!");
                 return false;
             }
         }

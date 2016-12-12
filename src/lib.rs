@@ -13,11 +13,29 @@ pub struct IntMap<V>{
 
 impl<V> IntMap<V> {
 
+    /// Creates a new IntMap.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// ```
     pub fn new() -> Self {
         IntMap::with_capacity(4)
     }
 
 
+    /// Creates a new IntMap with a at least capacity, all sizes is a power of 2.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
+    /// ```
     pub fn with_capacity(capacity: usize) -> Self {
         
         let mut map = IntMap { cache: Vec::new(), size: 0, count: 0, mod_mask: 0 };
@@ -32,6 +50,16 @@ impl<V> IntMap<V> {
     }
 
 
+    /// Insert key/value into the IntMap.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map = IntMap::new();
+    /// map.insert(21, "Eat my shorts");
+    /// ```
     pub fn insert(&mut self, key: u64, value: V) -> bool {
         let ix = self.calc_index(key);
 
@@ -54,7 +82,20 @@ impl<V> IntMap<V> {
         true
     }
 
-
+    /// Get value from the IntMap.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// let val = map.get(21);
+    /// assert!(val.is_some());
+    /// assert_eq!(*val.unwrap(), 42);
+    /// assert!(map.contains_key(21));
+    /// ```
     pub fn get(&self, key: u64) -> Option<&V> {
         let ix = self.calc_index(key);
 
@@ -75,7 +116,20 @@ impl<V> IntMap<V> {
         }
     }
 
-
+    /// Remove value from the IntMap.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// let val = map.remove(21);
+    /// assert!(val.is_some());
+    /// assert_eq!(val.unwrap(), 42);
+    /// assert!(!map.contains_key(21));
+    /// ```
     pub fn remove(&mut self, key: u64) -> Option<V> {
         let ix = self.calc_index(key);
 
@@ -100,7 +154,17 @@ impl<V> IntMap<V> {
         }
     }
 
-
+    /// Returns true if key is in map.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// assert!(map.contains_key(21));
+    /// ```
     pub fn contains_key(&self, key: u64) -> bool {
         match self.get(key) {
             Some(_) => true, 
@@ -109,6 +173,8 @@ impl<V> IntMap<V> {
     }
 
 
+    /// Removes all elements from map.
+    ///
     pub fn clear(&mut self) {
         for i in 0..self.cache.len() {
             self.cache[i].clear();
@@ -175,11 +241,15 @@ impl<V> IntMap<V> {
     }
 
 
+    /// Number of elements in map.
+    ///
     pub fn count(&self) -> u64 {
         self.count as u64
     }
 
 
+    /// Number of slots filled.
+    ///
     pub fn load(&self) -> u64 {
         let mut count = 0;
 
@@ -193,11 +263,14 @@ impl<V> IntMap<V> {
     }
 
 
+
     pub fn load_rate(&self) -> f64 {
         (self.count as f64) / (self.cache.len() as f64) * 100f64
     }
 
 
+    /// Total number of slots available.
+    ///
     pub fn capacity(&self) -> usize {
         self.cache.len()
     }

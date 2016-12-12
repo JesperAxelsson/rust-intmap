@@ -63,4 +63,22 @@ mod tests {
         assert_eq!(map.count(), 0);
         assert!(map.assert_count());
     }
+
+    #[test]
+    fn add_string() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            map.insert(i, format!("item: {:?}", i));
+        }
+    }
+
+    #[test]
+    fn single_add_get() {
+        let mut map: IntMap<u64> = IntMap::new();
+        map.insert(21, 42);
+        let val = map.get(21);
+        assert!(val.is_some());
+        assert_eq!(*val.unwrap(), 42);
+    }
 }

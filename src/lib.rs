@@ -116,6 +116,44 @@ impl<V> IntMap<V> {
         }
     }
 
+    /// Get mutable value from the IntMap.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// 
+    /// assert_eq!(*map.get(21).unwrap(), 42);
+    /// assert!(map.contains_key(21));
+    /// 
+    /// { 
+    ///     let mut val = map.get_mut(21).unwrap();
+    ///     *val+=1;
+    /// }
+    ///     assert_eq!(*map.get(21).unwrap(), 43);
+    /// ```
+    pub fn get_mut(&mut self, key: u64) -> Option<&mut V> {
+        let ix = self.calc_index(key);
+
+        let ref mut vals = self.cache[ix];
+
+        if vals.len() > 0 {
+            for kv in vals {
+                if kv.key == key {
+                    return Some(&mut kv.value);
+                }
+            }
+
+            return None;
+
+        } else {
+            return None;
+        }
+    }
+
     /// Remove value from the IntMap.
     ///
     /// # Examples

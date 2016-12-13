@@ -13,7 +13,7 @@ mod tests {
     use test::Bencher;
 
 
-    const VEC_COUNT: usize = 2_000;
+    const VEC_COUNT: usize = 50;
 
 
     #[bench]

@@ -81,37 +81,4 @@ mod tests {
         assert!(val.is_some());
         assert_eq!(*val.unwrap(), 42);
     }
-
-    // #[test]
-    // fn intmap_get_mut() {
-    //     let mut map: IntMap<u64> = IntMap::new();
-
-
-    //     for s in data.iter() {
-    //         assert!(map.insert(*s, *s), "intmap insert failed! ix: {:?}", s);
-    //     }
-
-    //     assert_eq!(map.len(), count);
-    //     assert!(map.assert_count());
-
-    //     for s in data.iter() {
-    //         assert_eq!(*map.get(*s).unwrap(), *s, "intmap get failed! key: {:?}", s);
-    //     }
-
-    //     assert_eq!(map.len(), count);
-
-    //     for s in data.iter() {
-    //         assert!(map.contains_key(*s), "intmap contains_key failed! key: {:?}", s);
-    //     }
-
-    //     assert_eq!(map.len(), count);
-
-    //     for s in data.iter() {
-    //         let val = map.remove(*s).unwrap();
-    //         assert_eq!(val, *s, "intmap remove failed! key: {:?}", s);
-    //     }
-
-    //     assert_eq!(map.len(), 0);
-    //     assert!(map.assert_count());
-    // }
 }

@@ -81,4 +81,50 @@ mod tests {
         assert!(val.is_some());
         assert_eq!(*val.unwrap(), 42);
     }
+
+    #[test]
+    fn map_iter() {
+        let count = 20_000;
+        let data = get_random_range(count as usize);
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..20_000 {
+            map.insert(i, i);
+        }
+
+        for (k, v) in map.iter() {
+            assert_eq!(k, *v);
+            assert_eq!(k, data[k as usize]);
+        }
+    }
+
+    #[test]
+    fn map_iter_keys() {
+        let count = 20_000;
+        let data = get_random_range(count as usize);
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i+1);
+        }
+
+        for k in map.keys() {
+            assert_eq!(k, data[k as usize]);
+        }
+    }
+
+    #[test]
+    fn map_iter_values() {
+        let count = 20_000;
+        let data = get_random_range(count as usize);
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i+1);
+        }
+
+        for v in map.values() {
+            assert_eq!(*v-1, data[*v as usize]);
+        }
+    }
 }

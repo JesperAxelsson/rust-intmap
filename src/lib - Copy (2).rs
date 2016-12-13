@@ -1,14 +1,11 @@
-extern crate core;
 
-use core::iter::Iterator;
-
-// struct Kv<V> {
-//     key: u64, 
-//     value: V
-// }
+struct Kv<V> {
+    key: u64, 
+    value: V
+}
 
 pub struct IntMap<V>{
-    cache:  Vec<Vec<(u64, V)>>,
+    cache:  Vec<Vec<Kv<V>>>,
     size: u32,
     mod_mask: u64,
     count: usize,
@@ -69,13 +66,13 @@ impl<V> IntMap<V> {
         {
         let ref mut vals = self.cache[ix];
         for ref kv in vals.iter() {
-            if kv.0 == key {
+            if kv.key == key {
                 return false;
             }
         }
 
         self.count += 1;
-        vals.push((key, value));
+        vals.push(Kv { key: key, value: value });
         }
         if (self.count & 4) == 4 {
             self.ensure_load_rate();
@@ -106,8 +103,8 @@ impl<V> IntMap<V> {
         if vals.len() > 0 {
 
             for kv in vals.iter() {
-                if kv.0 == key {
-                    return Some(&kv.1);
+                if kv.key == key {
+                    return Some(&kv.value);
                 }
             }
 
@@ -144,8 +141,8 @@ impl<V> IntMap<V> {
 
         if vals.len() > 0 {
             for kv in vals {
-                if kv.0 == key {
-                    return Some(&mut kv.1);
+                if kv.key == key {
+                    return Some(&mut kv.value);
                 }
             }
 
@@ -178,12 +175,12 @@ impl<V> IntMap<V> {
         if vals.len() > 0 {
 
             for i in 0..vals.len() {
-                let peek = vals[i].0;
+                let peek = vals[i].key;
 
                 if peek == key {
                     self.count -= 1;
                     let kv = vals.swap_remove(i);
-                    return Some(kv.1);
+                    return Some(kv.value);
                 }
             }
             
@@ -251,23 +248,6 @@ impl<V> IntMap<V> {
     }
 
 
-    //**** Iterators *****
-
-    pub fn iter<'a>(&mut self) -> Iter<V> {
-        Iter::new(&self.cache)
-    }
-
-    pub fn keys(&mut self) -> Keys<V> {
-        Keys { inner: self.iter() }
-    }
-
-    pub fn values(&mut self) -> Values<V> {
-        Values { inner: self.iter() }
-    }
-
-
-    //**** Internal hash stuff *****
-
     #[inline]
     fn hash_u64(seed: u64) -> u64 {
         let a = 11400714819323198549u64;
@@ -294,7 +274,7 @@ impl<V> IntMap<V> {
         let new_lim = self.lim();
         self.mod_mask = (new_lim as u64) - 1;
 
-        let mut vec: Vec<Vec<(u64, V)>> = Vec::new();
+        let mut vec: Vec<Vec<Kv<V>>> = Vec::new();
 
         vec.append(&mut self.cache);
 
@@ -306,7 +286,7 @@ impl<V> IntMap<V> {
             let mut values = vec.pop().unwrap();
             while values.len() > 0 {
                 if let Some(k) = values.pop() {
-                    let ix = self.calc_index(k.0);
+                    let ix = self.calc_index(k.key);
 
                     let ref mut vals = self.cache[ix];
                     vals.push(k);
@@ -371,88 +351,20 @@ impl<V> IntMap<V> {
 
         self.count == count
     }
+    // pub fn collisions(&self) -> HashMap<u64, u64> {
+    //     let mut map = HashMap::new();
 
+    //     for s in self.cache.iter() {
+    //         if s.len() > 1 {
+    //             let counter = map.entry(s.len() as u64).or_insert(0);
+    //             *counter += s.len() as u64;
+    //             // vec.push(s.len() as u64);
+    //         }
+    //     }
 
-    pub fn collisions(&self) -> IntMap<u64> {
-        let mut map = IntMap::new();
+    //     // map.sort();
 
-        for s in self.cache.iter() {
-            let key = s.len() as u64;
-            if key > 1 {
-                if !map.contains_key(key) {
-                    map.insert(key, 1);
-                } else {
-                    let counter = map.get_mut(key).unwrap();
-                    *counter += 1;
-                }
-            }
-        }
+    //     map
+    // }
 
-        // map.sort();
-
-        map
-    }
-
-}
-
-
-pub struct Iter<'a, V: 'a> {
-    inner: &'a Vec<Vec<(u64, V)>>,
-    ix: usize,
-    ix_ix: usize,
-}
-
-impl<'a, V> Iter<'a, V> {
-    pub fn new(vec: &'a Vec<Vec<(u64, V)>>) -> Self {
-        Iter { 
-            inner: &vec,
-            ix: 0, 
-            ix_ix: 0,
-         }
-    }
-}
-
-impl<'a, V> Iterator for Iter<'a, V> {
-    type Item = (u64, &'a V);
-
-    #[inline] 
-    fn next(&mut self) -> Option<(u64, &'a V)> { 
-
-        while self.inner.len() < self.ix {
-            while self.inner[self.ix].len() < self.ix_ix {
-                self.ix_ix += 1;
-                let (k, ref v) = self.inner[self.ix][self.ix_ix];
-                return Some((k, v));
-            }
-
-            self.ix += 1;
-        }
-        
-        return None;
-    }
-}
-
-
-pub struct Values<'a, V: 'a> {
-    inner: Iter<'a, V>
-}
-
-
-impl<'a, V> Iterator for Values<'a, V> {
-    type Item = &'a V;
-
-    #[inline] fn next(&mut self) -> Option<(&'a V)> { self.inner.next().map(|kv| kv.1) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
-}
-
-
-pub struct Keys<'a, V: 'a> {
-    inner: Iter<'a, V>
-}
-
-impl<'a, V> Iterator for Keys<'a, V> {
-    type Item = u64;
-
-    #[inline] fn next(&mut self) -> Option<u64> { self.inner.next().map(|kv| kv.0) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 }

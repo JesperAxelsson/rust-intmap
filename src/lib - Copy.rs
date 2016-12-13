@@ -253,17 +253,17 @@ impl<V> IntMap<V> {
 
     //**** Iterators *****
 
-    pub fn iter<'a>(&mut self) -> Iter<V> {
-        Iter::new(&self.cache)
-    }
+    // pub fn iter(&self) -> Iter<V> {
+    //     Iter { inner: self.cache.iter() }
+    // }
 
-    pub fn keys(&mut self) -> Keys<V> {
-        Keys { inner: self.iter() }
-    }
+    // pub fn keys(&self) -> Keys<V> {
+    //     Keys { inner: self.iter() }
+    // }
 
-    pub fn values(&mut self) -> Values<V> {
-        Values { inner: self.iter() }
-    }
+    // pub fn values(&self) -> Values<V> {
+    //     Values { inner: self.iter() }
+    // }
 
 
     //**** Internal hash stuff *****
@@ -371,88 +371,83 @@ impl<V> IntMap<V> {
 
         self.count == count
     }
+    // pub fn collisions(&self) -> HashMap<u64, u64> {
+    //     let mut map = HashMap::new();
 
+    //     for s in self.cache.iter() {
+    //         if s.len() > 1 {
+    //             let counter = map.entry(s.len() as u64).or_insert(0);
+    //             *counter += s.len() as u64;
+    //             // vec.push(s.len() as u64);
+    //         }
+    //     }
 
-    pub fn collisions(&self) -> IntMap<u64> {
-        let mut map = IntMap::new();
+    //     // map.sort();
 
-        for s in self.cache.iter() {
-            let key = s.len() as u64;
-            if key > 1 {
-                if !map.contains_key(key) {
-                    map.insert(key, 1);
-                } else {
-                    let counter = map.get_mut(key).unwrap();
-                    *counter += 1;
-                }
-            }
-        }
-
-        // map.sort();
-
-        map
-    }
+    //     map
+    // }
 
 }
 
+// pub struct Iter<'a, K: 'a, V: 'a> {
+//     inner: table::Iter<'a, K, V>
+// }
 
-pub struct Iter<'a, V: 'a> {
-    inner: &'a Vec<Vec<(u64, V)>>,
-    ix: usize,
-    ix_ix: usize,
-}
+// struct Iter<'a, V: 'a> {
+//     inner: std::slice::Iter<'a, Kv<&'a V>>,
+// }
 
-impl<'a, V> Iter<'a, V> {
-    pub fn new(vec: &'a Vec<Vec<(u64, V)>>) -> Self {
-        Iter { 
-            inner: &vec,
-            ix: 0, 
-            ix_ix: 0,
-         }
-    }
-}
+// impl<'a, V> Iterator for Iter<'a, V> {
+//     type Item = &'a Kv<V>;
 
-impl<'a, V> Iterator for Iter<'a, V> {
-    type Item = (u64, &'a V);
-
-    #[inline] 
-    fn next(&mut self) -> Option<(u64, &'a V)> { 
-
-        while self.inner.len() < self.ix {
-            while self.inner[self.ix].len() < self.ix_ix {
-                self.ix_ix += 1;
-                let (k, ref v) = self.inner[self.ix][self.ix_ix];
-                return Some((k, v));
-            }
-
-            self.ix += 1;
-        }
-        
-        return None;
-    }
-}
+//     #[inline] fn next(&mut self) -> Option<(u64, (&'a V))> { self.inner.next().map(|kv| Some((kv.key, v.value))) }
+// }
 
 
-pub struct Values<'a, V: 'a> {
-    inner: Iter<'a, V>
-}
+// /// HashMap values iterator.
+// pub struct Values<'a, V: 'a> {
+//     inner: Iter<'a, V>
+// }
 
 
-impl<'a, V> Iterator for Values<'a, V> {
-    type Item = &'a V;
+// impl<'a, V> Iterator for Values<'a, V> {
+//     type Item = &'a V;
 
-    #[inline] fn next(&mut self) -> Option<(&'a V)> { self.inner.next().map(|kv| kv.1) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
-}
+//     #[inline] fn next(&mut self) -> Option<(&'a V)> { self.inner.next().map(|(_, v)| v) }
+//     // #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+// }
 
+// impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
+//     type Item = &'a mut V;
 
-pub struct Keys<'a, V: 'a> {
-    inner: Iter<'a, V>
-}
+//     #[inline] fn next(&mut self) -> Option<(&'a mut V)> { self.inner.next().map(|(_, v)| v) }
+//     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+// }
 
-impl<'a, V> Iterator for Keys<'a, V> {
-    type Item = u64;
+// impl<'a, K, V> Iterator for Keys<'a, K, V> {
+//     type Item = &'a K;
 
-    #[inline] fn next(&mut self) -> Option<u64> { self.inner.next().map(|kv| kv.0) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
-}
+//     #[inline] fn next(&mut self) -> Option<(&'a K)> { self.inner.next().map(|(k, _)| k) }
+//     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+// }
+
+// // Implement `Iterator` for `Fibonacci`.
+// // The `Iterator` trait only requires a method to be defined for the `next` element.
+// impl<V> Iterator for IntMap<V> {
+//     type Item = u32;
+
+//     // Here, we define the sequence using `.curr` and `.next`.
+//     // The return type is `Option<T>`:
+//     //     * When the `Iterator` is finished, `None` is returned.
+//     //     * Otherwise, the next value is wrapped in `Some` and returned.
+//     fn next(&mut self) -> Option<u32> {
+//         let new_next = self.curr + self.next;
+
+//         self.curr = self.next;
+//         self.next = new_next;
+
+//         // Since there's no endpoint to a Fibonacci sequence, the `Iterator` 
+//         // will never return `None`, and `Some` is always returned.
+//         Some(self.curr)
+//     }
+// }

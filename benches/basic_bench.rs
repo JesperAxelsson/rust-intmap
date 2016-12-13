@@ -13,7 +13,7 @@ mod tests {
     use test::Bencher;
 
 
-    const VEC_COUNT: usize = 50;
+    const VEC_COUNT: usize = 1000;
 
 
     #[bench]
@@ -65,6 +65,7 @@ mod tests {
             }
         });
     }
+
 
     #[bench]
     fn u64_get_intmap(b: &mut Bencher) {

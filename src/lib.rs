@@ -212,12 +212,39 @@ impl<V> IntMap<V> {
 
     /// Removes all elements from map.
     ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///    
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// map.clear();
+    /// assert_eq!(map.len(), 0);
+    /// ```    
     pub fn clear(&mut self) {
         for i in 0..self.cache.len() {
             self.cache[i].clear();
         }
 
         self.count = 0;
+    }
+
+    /// Returns true if map is empty
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///    
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(21, 42);
+    /// assert!(!map.is_empty());
+    /// map.remove(21);
+    /// assert!(map.is_empty());
+    /// ```    
+    pub fn is_empty(&mut self) -> bool {
+        self.count == 0
     }
 
 

@@ -5,17 +5,17 @@ Might be missing some functionality but you can remove, add, get and clear for n
 
 Be aware that no effort is made against DoS attacks.
 
-Performace compared to the standard hashmap: 
+Performace compared to the standard hashmap:
 
 ````
-test tests::u64_get_built_in    ... bench:      43,925 ns/iter (+/- 2,712)
-test tests::u64_get_intmap      ... bench:       1,099 ns/iter (+/- 136)
-test tests::u64_insert_built_in ... bench:      64,717 ns/iter (+/- 2,830)
-test tests::u64_insert_intmap   ... bench:      28,419 ns/iter (+/- 983)
+test tests::u64_get_built_in    ... bench:      22,320 ns/iter (+/- 446)
+test tests::u64_get_intmap      ... bench:       2,959 ns/iter (+/- 148)
+test tests::u64_insert_built_in ... bench:      27,666 ns/iter (+/- 1,230)
+test tests::u64_insert_intmap   ... bench:      14,047 ns/iter (+/- 1,461)
 ````
 
 # How to use
-Simple example. 
+Simple example.
 
 ````rust
 extern crate intmap;

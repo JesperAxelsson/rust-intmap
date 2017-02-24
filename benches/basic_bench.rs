@@ -4,8 +4,11 @@ extern crate intmap;
 extern crate rand;
 extern crate test;
 
+extern crate ordermap;
+
 use intmap::IntMap;
 use std::collections::HashMap;
+use ordermap::OrderMap;
 
 
 #[cfg(test)]
@@ -16,6 +19,7 @@ mod tests {
 
     const VEC_COUNT: usize = 1000;
 
+    // ********** Built in **********
 
     #[bench]
     fn u64_insert_built_in(b: &mut Bencher) {
@@ -52,6 +56,45 @@ mod tests {
         });
     }
 
+    // ********** Ordermap **********
+
+    #[bench]
+    fn u64_insert_ordermap(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+        let mut map = OrderMap::with_capacity(data.len());
+
+        b.iter(|| {
+            map.clear();
+
+            for s in data.iter() {
+               test::black_box(map.insert(s, s));
+            }
+
+        });
+    }
+
+    #[bench]
+    fn u64_get_ordermap(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+        let mut map: OrderMap<&u64, &u64>  = OrderMap::with_capacity(data.len());
+
+        for s in data.iter() {
+            test::black_box(map.insert(s, s)
+            );
+        }
+
+        b.iter(|| {
+            for s in data.iter() {
+                test::black_box({
+                    map.contains_key(s);
+                });
+            }
+        });
+    }
+
+
+    // ********** Intmap **********
+
     #[bench]
     fn u64_insert_intmap(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
@@ -83,6 +126,8 @@ mod tests {
         });
     }
 
+    // ********** Misc **********
+
 
     fn get_random_range(count: usize) -> Vec<u64> {
         use rand::{Rng, SeedableRng, StdRng};
@@ -101,4 +146,5 @@ mod tests {
 
         vec
     }
+
 }

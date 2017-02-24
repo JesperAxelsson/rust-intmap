@@ -3,7 +3,7 @@ extern crate core;
 use core::iter::Iterator;
 
 // struct Kv<V> {
-//     key: u64, 
+//     key: u64,
 //     value: V
 // }
 
@@ -13,6 +13,7 @@ pub struct IntMap<V>{
     mod_mask: u64,
     count: usize,
 }
+
 
 impl<V> IntMap<V> {
 
@@ -40,11 +41,11 @@ impl<V> IntMap<V> {
     /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
-        
+
         let mut map = IntMap { cache: Vec::new(), size: 0, count: 0, mod_mask: 0 };
 
         map.increase_cache();
-        
+
         while map.lim() < capacity {
             map.increase_cache();
         }
@@ -127,11 +128,11 @@ impl<V> IntMap<V> {
     ///
     /// let mut map: IntMap<u64> = IntMap::new();
     /// map.insert(21, 42);
-    /// 
+    ///
     /// assert_eq!(*map.get(21).unwrap(), 42);
     /// assert!(map.contains_key(21));
-    /// 
-    /// { 
+    ///
+    /// {
     ///     let mut val = map.get_mut(21).unwrap();
     ///     *val+=1;
     /// }
@@ -186,7 +187,7 @@ impl<V> IntMap<V> {
                     return Some(kv.1);
                 }
             }
-            
+
             return None;
 
         } else {
@@ -207,7 +208,7 @@ impl<V> IntMap<V> {
     /// ```
     pub fn contains_key(&self, key: u64) -> bool {
         match self.get(key) {
-            Some(_) => true, 
+            Some(_) => true,
             None    => false
         }
     }
@@ -219,12 +220,12 @@ impl<V> IntMap<V> {
     ///
     /// ```
     /// use intmap::IntMap;
-    ///    
+    ///
     /// let mut map: IntMap<u64> = IntMap::new();
     /// map.insert(21, 42);
     /// map.clear();
     /// assert_eq!(map.len(), 0);
-    /// ```    
+    /// ```
     pub fn clear(&mut self) {
         for i in 0..self.cache.len() {
             self.cache[i].clear();
@@ -239,13 +240,13 @@ impl<V> IntMap<V> {
     ///
     /// ```
     /// use intmap::IntMap;
-    ///    
+    ///
     /// let mut map: IntMap<u64> = IntMap::new();
     /// map.insert(21, 42);
     /// assert!(!map.is_empty());
     /// map.remove(21);
     /// assert!(map.is_empty());
-    /// ```    
+    /// ```
     pub fn is_empty(&mut self) -> bool {
         self.count == 0
     }
@@ -253,16 +254,20 @@ impl<V> IntMap<V> {
 
     //**** Iterators *****
 
-    pub fn iter<'a>(&mut self) -> Iter<V> {
+    pub fn iter<'a>(&self) -> Iter<u64, V> {
         Iter::new(&self.cache)
     }
 
-    pub fn keys(&mut self) -> Keys<V> {
+    pub fn keys(&mut self) -> Keys<u64, V> {
         Keys { inner: self.iter() }
     }
 
-    pub fn values(&mut self) -> Values<V> {
+    pub fn values(&mut self) -> Values<u64, V> {
         Values { inner: self.iter() }
+    }
+
+    pub fn iter_mut<'a>(&mut self) -> IterMut<u64, V> {
+        IterMut::new(&mut self.cache)
     }
 
 
@@ -301,7 +306,7 @@ impl<V> IntMap<V> {
         for _ in 0..new_lim {
             self.cache.push(Vec::with_capacity(0));
         }
-        
+
         while vec.len() > 0 {
             let mut values = vec.pop().unwrap();
             while values.len() > 0 {
@@ -310,7 +315,7 @@ impl<V> IntMap<V> {
 
                     let ref mut vals = self.cache[ix];
                     vals.push(k);
-                }   
+                }
             }
         }
 
@@ -396,63 +401,139 @@ impl<V> IntMap<V> {
 }
 
 
-pub struct Iter<'a, V: 'a> {
-    inner: &'a Vec<Vec<(u64, V)>>,
-    ix: usize,
-    ix_ix: usize,
+
+    // #[derive(Debug)]
+    // pub struct IterMut2<'a, V: 'a> {
+    //     iter: std::iter::Map<'a, Vec<(u64, V)>>,
+    //     // inner: SliceIterMut<'a, (u64, V)>,
+    // }
+
+
+use std::slice::Iter as SliceIter;
+use std::slice::IterMut as SliceIterMut;
+
+// ***************** Iter *********************
+
+pub struct Iter<'a, K: 'a, V: 'a> {
+    outer: SliceIter<'a, Vec<(K, V)>>,
+    inner: SliceIter<'a, (K, V)>,
 }
 
-impl<'a, V> Iter<'a, V> {
-    pub fn new(vec: &'a Vec<Vec<(u64, V)>>) -> Self {
-        Iter { 
-            inner: &vec,
-            ix: 0, 
-            ix_ix: 0,
+impl<'a, K, V> Iter<'a, K, V> {
+    pub fn new(vec: &'a Vec<Vec<(K, V)>>) -> Self {
+        let mut outer = vec.iter();
+        let inner = outer.next()
+                         .map(|v| v.iter())
+                         .unwrap_or_else(|| { unsafe { std::mem::zeroed() }});
+
+        Iter {
+            outer: outer,
+            inner: inner,
          }
     }
 }
 
-impl<'a, V> Iterator for Iter<'a, V> {
-    type Item = (u64, &'a V);
+impl<'a, K, V> Iterator for Iter<'a, K, V> {
+    type Item = (&'a K, &'a V);
 
-    #[inline] 
-    fn next(&mut self) -> Option<(u64, &'a V)> { 
-
-        while self.inner.len() < self.ix {
-            while self.inner[self.ix].len() < self.ix_ix {
-                self.ix_ix += 1;
-                let (k, ref v) = self.inner[self.ix][self.ix_ix];
-                return Some((k, v));
+    #[inline]
+    fn next(&mut self) -> Option<(&'a K, &'a V)> {
+        loop {
+            match self.inner.next() {
+                Some(r) => return Some((&r.0, &r.1)),
+                None => (),
             }
 
-            self.ix += 1;
+            match self.outer.next() {
+                Some(v) => self.inner = v.iter(),
+                None => return None,
+            }
         }
-        
-        return None;
     }
 }
 
 
-pub struct Values<'a, V: 'a> {
-    inner: Iter<'a, V>
+// ***************** Iter Mut *********************
+
+pub struct IterMut<'a, K: 'a, V: 'a> {
+    outer: SliceIterMut<'a, Vec<(K, V)>>,
+    inner: SliceIterMut<'a, (K, V)>,
+}
+
+impl<'a, K, V> IterMut<'a, K, V> {
+    fn new(vec: &'a mut Vec<Vec<(K, V)>>) -> IterMut<'a, K, V> {
+        let mut outer = vec.iter_mut();
+        let inner = outer.next()
+                         .map(|v| v.iter_mut())
+                         .unwrap_or_else(|| { unsafe { std::mem::zeroed() }});
+
+        IterMut {
+            outer: outer,
+            inner: inner,
+        }
+    }
 }
 
 
-impl<'a, V> Iterator for Values<'a, V> {
+impl<'a, K, V> Iterator for IterMut<'a, K, V> {
+    type Item = (&'a K, &'a mut V);
+
+    #[inline]
+    fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
+        loop {
+            match self.inner.next() {
+                Some(r) => return Some((&r.0, &mut r.1)),
+                None => (),
+            }
+
+            match self.outer.next() {
+                Some(v) => self.inner = v.iter_mut(),
+                None => return None,
+            }
+        }
+    }
+}
+
+
+// ***************** Values Iter *********************
+
+pub struct Values<'a, K:'a, V: 'a> {
+    inner: Iter<'a, K, V>
+}
+
+
+impl<'a, K, V> Iterator for Values<'a, K, V> {
     type Item = &'a V;
 
     #[inline] fn next(&mut self) -> Option<(&'a V)> { self.inner.next().map(|kv| kv.1) }
     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 }
 
+// ***************** Keys Iter *********************
 
-pub struct Keys<'a, V: 'a> {
-    inner: Iter<'a, V>
+pub struct Keys<'a, K: 'a, V: 'a> {
+    inner: Iter<'a, K, V>
 }
 
-impl<'a, V> Iterator for Keys<'a, V> {
-    type Item = u64;
+impl<'a, K, V> Iterator for Keys<'a, K, V> {
+    type Item = &'a K;
 
-    #[inline] fn next(&mut self) -> Option<u64> { self.inner.next().map(|kv| kv.0) }
+    #[inline] fn next(&mut self) -> Option<&'a K> { self.inner.next().map(|kv| kv.0) }
     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 }
+
+// // ***************** Values Mut *********************
+
+// pub struct ValuesMut<'a, V: 'a> {
+//     inner: Iter<'a, V>
+// }
+
+
+// impl<'a, V> Iterator for ValuesMut<'a, V> {
+//     type Item = &'a V;
+
+//     #[inline] fn next(&mut self) -> Option<(&'a V)> { self.inner.next().map(|kv| kv.1) }
+//     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+// }
+
+

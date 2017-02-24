@@ -24,7 +24,7 @@ mod tests {
         vec.sort();
         vec.dedup();
 
-        vec    
+        vec
     }
 
     #[test]
@@ -85,46 +85,63 @@ mod tests {
     #[test]
     fn map_iter() {
         let count = 20_000;
-        let data = get_random_range(count as usize);
         let mut map: IntMap<u64> = IntMap::new();
 
-        for i in 0..20_000 {
+        for i in 0..count {
             map.insert(i, i);
         }
 
         for (k, v) in map.iter() {
-            assert_eq!(k, *v);
-            assert_eq!(k, data[k as usize]);
+            assert_eq!(*k, *v);
         }
     }
 
     #[test]
     fn map_iter_keys() {
         let count = 20_000;
-        let data = get_random_range(count as usize);
+        let data: Vec<_> = (0..count).collect();
         let mut map: IntMap<u64> = IntMap::new();
 
         for i in 0..count {
-            map.insert(i, i+1);
+            map.insert(i, i);
         }
 
         for k in map.keys() {
-            assert_eq!(k, data[k as usize]);
+            assert_eq!(*k, data[*k as usize]);
         }
     }
 
     #[test]
     fn map_iter_values() {
         let count = 20_000;
-        let data = get_random_range(count as usize);
+        let data: Vec<_> = (0..count).collect();
         let mut map: IntMap<u64> = IntMap::new();
 
         for i in 0..count {
-            map.insert(i, i+1);
+            map.insert(i, i);
         }
 
         for v in map.values() {
-            assert_eq!(*v-1, data[*v as usize]);
+            assert_eq!(*v, data[*v as usize]);
         }
+    }
+
+    #[test]
+    fn map_mut_iter_values() {
+        let count = 20_000;
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        for kv in map.iter_mut() {
+            *kv.1 += 1;
+        }
+
+        for n in 0..count {
+            assert_eq!(n+1, *map.get(n).expect("Failed to get number!"));
+        }
+
     }
 }

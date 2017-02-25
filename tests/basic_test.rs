@@ -148,15 +148,17 @@ mod tests {
     #[test]
     fn map_iter_empty() {
         let mut map: IntMap<u64> = IntMap::new();
+        map.clear();
 
-        for kv in map.iter_mut() {
-            *kv.1 += 1;
+        for kv in map.iter() {
+            println!("Not printing: {:?}", kv);
         }
     }
 
     #[test]
     fn map_mut_iter_empty() {
         let mut map: IntMap<u64> = IntMap::new();
+        map.clear();
 
         for kv in map.iter_mut() {
             *kv.1 += 1;

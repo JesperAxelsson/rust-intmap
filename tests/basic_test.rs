@@ -127,7 +127,7 @@ mod tests {
     }
 
     #[test]
-    fn map_mut_iter_values() {
+    fn map_mut_iter() {
         let count = 20_000;
         let mut map: IntMap<u64> = IntMap::new();
 
@@ -143,5 +143,23 @@ mod tests {
             assert_eq!(n+1, *map.get(n).expect("Failed to get number!"));
         }
 
+    }
+
+    #[test]
+    fn map_iter_empty() {
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for kv in map.iter_mut() {
+            *kv.1 += 1;
+        }
+    }
+
+    #[test]
+    fn map_mut_iter_empty() {
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for kv in map.iter_mut() {
+            *kv.1 += 1;
+        }
     }
 }

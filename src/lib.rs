@@ -424,7 +424,7 @@ impl<'a, K, V> Iter<'a, K, V> {
         let mut outer = vec.iter();
         let inner = outer.next()
                          .map(|v| v.iter())
-                         .unwrap_or_else(|| { unsafe { std::mem::zeroed() }});
+                         .unwrap_or_else(|| (&[]).iter());
 
         Iter {
             outer: outer,
@@ -465,7 +465,7 @@ impl<'a, K, V> IterMut<'a, K, V> {
         let mut outer = vec.iter_mut();
         let inner = outer.next()
                          .map(|v| v.iter_mut())
-                         .unwrap_or_else(|| { unsafe { std::mem::zeroed() }});
+                         .unwrap_or_else(|| (&mut []).iter_mut() );
 
         IterMut {
             outer: outer,

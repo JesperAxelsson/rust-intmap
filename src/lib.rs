@@ -1,6 +1,6 @@
 extern crate core;
 
-use core::iter::Iterator;
+use core::iter::{IntoIterator, Iterator};
 
 // struct Kv<V> {
 //     key: u64,
@@ -411,6 +411,7 @@ impl<V> IntMap<V> {
 
 use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;
+use std::vec::IntoIter as VecIntoIter;
 
 // ***************** Iter *********************
 
@@ -536,4 +537,51 @@ impl<'a, K, V> Iterator for Keys<'a, K, V> {
 //     #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
 // }
 
+// ***************** Into Iter *********************
 
+impl<V> IntoIterator for IntMap<V> {
+    type Item = (u64, V);
+    type IntoIter = IntoIter<u64, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IntoIter::new(self.cache)
+    }
+}
+
+pub struct IntoIter<K, V> {
+    outer: VecIntoIter<Vec<(K, V)>>,
+    inner: VecIntoIter<(K, V)>,
+}
+
+impl<K, V> IntoIter<K, V> {
+    pub fn new(vec: Vec<Vec<(K, V)>>) -> Self {
+        let mut outer = vec.into_iter();
+        let inner = outer.next()
+                         .map(|v| v.into_iter())
+                         .unwrap_or_else(|| (Vec::new()).into_iter());
+
+        IntoIter {
+            outer: outer,
+            inner: inner,
+         }
+    }
+}
+
+impl<K, V> Iterator for IntoIter<K, V> {
+    type Item = (K, V);
+
+    #[inline]
+    fn next(&mut self) -> Option<(K, V)> {
+        loop {
+            match self.inner.next() {
+                Some(r) => return Some((r.0, r.1)),
+                None => (),
+            }
+
+            match self.outer.next() {
+                Some(v) => self.inner = v.into_iter(),
+                None => return None,
+            }
+        }
+    }
+}

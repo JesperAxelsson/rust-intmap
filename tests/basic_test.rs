@@ -164,4 +164,28 @@ mod tests {
             *kv.1 += 1;
         }
     }
+
+    #[test]
+    fn map_into_iter() {
+        let count = 20_000;
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        for (k, v) in map.into_iter() {
+            assert_eq!(k, v);
+        }
+    }
+
+    #[test]
+    fn map_into_iter_empty() {
+        let mut map: IntMap<u64> = IntMap::new();
+        map.clear();
+
+        for kv in map.into_iter() {
+            println!("Not printing: {:?}", kv);
+        }
+    }
 }

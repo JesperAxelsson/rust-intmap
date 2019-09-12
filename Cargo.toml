@@ -1,6 +1,6 @@
 [package]
 name = "intmap"
-version = "0.4.0"
+version = "0.5.0"
 description = "Specialized HashMap for u64 keys"
 authors = ["Jesper Axelsson <jesperaxe@gmail.com>"]
 readme = "README.md"

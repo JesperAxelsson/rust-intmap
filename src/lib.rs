@@ -2,10 +2,6 @@ extern crate core;
 
 use core::iter::{IntoIterator, Iterator};
 
-// struct Kv<V> {
-//     key: u64,
-//     value: V
-// }
 
 pub struct IntMap<V>{
     cache:  Vec<Vec<(u64, V)>>,
@@ -585,3 +581,16 @@ impl<K, V> Iterator for IntoIter<K, V> {
         }
     }
 }
+
+// ***************** Extend *********************
+
+impl<V> Extend<(u64, V)> for IntMap<V>
+{
+    #[inline]
+    fn extend<T: IntoIterator<Item = (u64, V)>>(&mut self, iter: T) {
+        for elem in iter {
+            self.insert(elem.0, elem.1);
+        }        
+    }
+}
+

@@ -188,4 +188,28 @@ mod tests {
             println!("Not printing: {:?}", kv);
         }
     }
+
+    
+    #[test]
+    fn extend_two_maps() {
+        let count = 20_000;
+        let mut map_1: IntMap<u64> = IntMap::new();
+        let mut map_2: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map_1.insert(i, i);
+        }
+
+        for i in count..(count*2) {
+            map_2.insert(i, i);
+        }
+
+        map_1.extend(map_2.into_iter());
+
+        assert_eq!(map_1.len(), (count * 2) as usize);
+
+        for (k, v) in map_1.iter() {
+            assert_eq!(k, v);
+        }
+    }
 }

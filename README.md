@@ -1,4 +1,4 @@
-[![crates.io](https://img.shields.io/crates/v/intmap.svg)(https://crates.io/crates/intmap)]
+[![crates.io](https://img.shields.io/crates/v/intmap.svg)](https://crates.io/crates/intmap)
 
 # rust-intmap
 Specialized hashmap for u64 keys

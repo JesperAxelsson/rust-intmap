@@ -127,6 +127,25 @@ mod tests {
     }
 
     #[test]
+    fn map_iter_values_mut() {
+        let count = 20_000;
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        for value in map.values_mut() {
+            *value += 1;
+        }
+
+        for n in 0..count {
+            assert_eq!(n+1, *map.get(n).expect("Failed to get number!"));
+        }
+
+    }
+
+    #[test]
     fn map_mut_iter() {
         let count = 20_000;
         let mut map: IntMap<u64> = IntMap::new();
@@ -151,7 +170,7 @@ mod tests {
         map.clear();
 
         for kv in map.iter() {
-            println!("Not printing: {:?}", kv);
+            panic!("Not printing: {:?}", kv);
         }
     }
 
@@ -160,8 +179,8 @@ mod tests {
         let mut map: IntMap<u64> = IntMap::new();
         map.clear();
 
-        for kv in map.iter_mut() {
-            *kv.1 += 1;
+        for _ in map.iter_mut() {
+            panic!();
         }
     }
 
@@ -180,12 +199,27 @@ mod tests {
     }
 
     #[test]
+    fn map_drain() {
+        let count = 20_000;
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        for (k, v) in map.drain() {
+            assert_eq!(k, v);
+        }
+        assert_eq!(map.len(), 0);
+    }
+
+    #[test]
     fn map_into_iter_empty() {
         let mut map: IntMap<u64> = IntMap::new();
         map.clear();
 
         for kv in map.into_iter() {
-            println!("Not printing: {:?}", kv);
+            panic!("Not printing: {:?}", kv);
         }
     }
 
@@ -211,5 +245,37 @@ mod tests {
         for (k, v) in map_1.iter() {
             assert_eq!(k, v);
         }
+    }
+
+    #[test]
+    fn from_iter_collect() {
+        let count = 20_000;
+
+        let map = (0..count)
+            .map(|i| (i, i * i))
+            .collect::<IntMap<_>>();
+
+        for k in 0..count {
+            assert!(map.contains_key(k));
+        }
+
+        for (&k, &v) in map.iter() {
+            assert_eq!(k * k, v);
+        }
+    }
+
+    #[test]
+    fn map_equality() {
+        let count = 5_000;
+
+        let map_1 = (0..count)
+            .map(|i| (i, i * i))
+            .collect::<IntMap<_>>();
+        
+        let map_2 = (0..count).rev()
+            .map(|i| (i, i * i))
+            .collect::<IntMap<_>>();
+        
+        assert_eq!(map_1, map_2);
     }
 }

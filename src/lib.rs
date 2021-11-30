@@ -238,6 +238,45 @@ impl<V> IntMap<V> {
         self.count = 0;
     }
 
+    /// Retains only the elements specified by the predicate.
+    ///
+    /// In other words, remove all elements such that `f(key, &value)` returns false.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::new();
+    /// map.insert(1, 11);
+    /// map.insert(2, 12);
+    /// map.insert(4, 13);
+    ///
+    /// // retain only the odd values
+    /// map.retain(|k, v| *v % 2 == 1);
+    ///
+    /// assert_eq!(map.len(), 2);
+    /// assert!(map.contains_key(1));
+    /// assert!(map.contains_key(4));
+    /// ```
+    pub fn retain<F>(&mut self, mut f: F)
+    where
+        F: FnMut(u64, &V) -> bool,
+    {
+        let mut removed = 0;
+        for i in 0..self.cache.len() {
+            self.cache[i].retain(|(k, v)| {
+                let keep = (f)(*k, v);
+                if !keep {
+                    removed += 1;
+                }
+                keep
+            });
+        }
+
+        self.count -= removed;
+    }
+
     /// Returns true if map is empty
     ///
     /// # Examples

@@ -3,7 +3,7 @@ extern crate rand;
 
 extern crate intmap;
 
-use intmap::IntMap;
+use intmap::{Entry, IntMap};
 
 #[cfg(test)]
 mod tests {
@@ -277,5 +277,56 @@ mod tests {
             .collect::<IntMap<_>>();
         
         assert_eq!(map_1, map_2);
+    }
+
+    #[test]
+    fn entry_api() {
+        let count = 20_000;
+        let data: Vec<u64> = (0..count).collect();
+        let mut map: IntMap<u64> = IntMap::new();
+
+        // Insert values 0..19999
+        for i in 0..count {
+            match map.entry(i) {
+                Entry::Occupied(_) => panic!("unexpected, i = {}", i),
+                Entry::Vacant(entry) => entry.insert(i),
+            };
+        }
+
+        assert_eq!(map.len(), count as usize);
+
+        for (k, v) in map.iter() {
+            assert_eq!(*v, data[*k as usize]);
+        }
+
+        // Replace values 0..19999 with 20000..39999
+        for i in 0..count {
+            match map.entry(i) {
+                Entry::Occupied(mut entry) => {
+                    assert_eq!(*entry.get(), i);
+                    assert_eq!(*entry.get_mut(), i);
+                    assert_eq!(entry.insert(count + i), i);
+                }
+                Entry::Vacant(_) => panic!("unexpected, i = {}", i),
+            };
+        }
+
+        assert_eq!(map.len(), count as usize);
+
+        for (k, v) in map.iter() {
+            assert_eq!(*v, count + data[*k as usize]);
+        }
+
+        // Remove values 20000..39999
+        for i in 0..count {
+            match map.entry(i) {
+                Entry::Occupied(entry) => {
+                    assert_eq!(entry.remove(), count + i);
+                }
+                Entry::Vacant(_) => panic!("unexpected, i = {}", i),
+            };
+        }
+
+        assert_eq!(map.len(), 0);
     }
 }

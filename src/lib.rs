@@ -58,15 +58,19 @@ impl<V> IntMap<V> {
         }
     }
 
-    /// Insert key/value into the IntMap.
+    /// Insert key/value into the IntMap if the key is not yet inserted.
     ///
+    /// This function returns true if key/value were inserted and false otherwise.
+    /// 
     /// # Examples
     ///
     /// ```
     /// use intmap::IntMap;
     ///
     /// let mut map = IntMap::new();
-    /// map.insert(21, "Eat my shorts");
+    /// assert!(map.insert(21, "Eat my shorts"));
+    /// assert!(!map.insert(21, "Ay, caramba"));
+    /// assert_eq!(map.get(21), Some(&"Eat my shorts"));
     /// ```
     pub fn insert(&mut self, key: u64, value: V) -> bool {
         let ix = self.calc_index(key);

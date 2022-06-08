@@ -3,16 +3,14 @@ extern crate core;
 use core::iter::{IntoIterator, Iterator};
 
 #[derive(Clone)]
-pub struct IntMap<V>{
-    cache:  Vec<Vec<(u64, V)>>,
+pub struct IntMap<V> {
+    cache: Vec<Vec<(u64, V)>>,
     size: u32,
     mod_mask: u64,
     count: usize,
 }
 
-
 impl<V> IntMap<V> {
-
     /// Creates a new IntMap.
     ///
     /// # Examples
@@ -26,7 +24,6 @@ impl<V> IntMap<V> {
         IntMap::with_capacity(4)
     }
 
-
     /// Creates a new IntMap with at least the given capacity, rounded
     /// to the next power of two.
     ///
@@ -38,8 +35,12 @@ impl<V> IntMap<V> {
     /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
-
-        let mut map = IntMap { cache: Vec::new(), size: 0, count: 0, mod_mask: 0 };
+        let mut map = IntMap {
+            cache: Vec::new(),
+            size: 0,
+            count: 0,
+            mod_mask: 0,
+        };
 
         map.increase_cache();
 
@@ -61,7 +62,7 @@ impl<V> IntMap<V> {
     /// Insert key/value into the IntMap if the key is not yet inserted.
     ///
     /// This function returns true if key/value were inserted and false otherwise.
-    /// 
+    ///
     /// # Examples
     ///
     /// ```
@@ -75,7 +76,6 @@ impl<V> IntMap<V> {
     pub fn insert(&mut self, key: u64, value: V) -> bool {
         let ix = self.calc_index(key);
 
-        {
         let ref mut vals = self.cache[ix];
         for ref kv in vals.iter() {
             if kv.0 == key {
@@ -85,7 +85,6 @@ impl<V> IntMap<V> {
 
         self.count += 1;
         vals.push((key, value));
-        }
         if (self.count & 4) == 4 {
             self.ensure_load_rate();
         }
@@ -113,7 +112,6 @@ impl<V> IntMap<V> {
         let ref vals = self.cache[ix];
 
         if vals.len() > 0 {
-
             for kv in vals.iter() {
                 if kv.0 == key {
                     return Some(&kv.1);
@@ -121,7 +119,6 @@ impl<V> IntMap<V> {
             }
 
             return None;
-
         } else {
             return None;
         }
@@ -159,7 +156,6 @@ impl<V> IntMap<V> {
             }
 
             return None;
-
         } else {
             return None;
         }
@@ -185,7 +181,6 @@ impl<V> IntMap<V> {
         let ref mut vals = self.cache[ix];
 
         if vals.len() > 0 {
-
             for i in 0..vals.len() {
                 let peek = vals[i].0;
 
@@ -197,7 +192,6 @@ impl<V> IntMap<V> {
             }
 
             return None;
-
         } else {
             return None;
         }
@@ -217,10 +211,9 @@ impl<V> IntMap<V> {
     pub fn contains_key(&self, key: u64) -> bool {
         match self.get(key) {
             Some(_) => true,
-            None    => false
+            None => false,
         }
     }
-
 
     /// Removes all elements from map.
     ///
@@ -298,7 +291,6 @@ impl<V> IntMap<V> {
         self.count == 0
     }
 
-
     //**** Iterators *****
 
     pub fn iter(&self) -> Iter<u64, V> {
@@ -318,7 +310,9 @@ impl<V> IntMap<V> {
     }
 
     pub fn values_mut(&mut self) -> ValuesMut<u64, V> {
-        ValuesMut { inner: self.iter_mut() }
+        ValuesMut {
+            inner: self.iter_mut(),
+        }
     }
 
     pub fn drain(&mut self) -> Drain<u64, V> {
@@ -341,12 +335,10 @@ impl<V> IntMap<V> {
         (hash & self.mod_mask) as usize
     }
 
-
     #[inline]
     fn lim(&self) -> usize {
         2u64.pow(self.size) as usize
     }
-
 
     fn increase_cache(&mut self) {
         self.size += 1;
@@ -373,23 +365,25 @@ impl<V> IntMap<V> {
             }
         }
 
-        debug_assert!(self.cache.len() == self.lim(), "cache vector the wrong length, lim: {:?} cache: {:?}", self.lim(), self.cache.len());
+        debug_assert!(
+            self.cache.len() == self.lim(),
+            "cache vector the wrong length, lim: {:?} cache: {:?}",
+            self.lim(),
+            self.cache.len()
+        );
     }
 
-
     fn ensure_load_rate(&mut self) {
-        while ((self.count*100) / self.cache.len()) > 70 {
+        while ((self.count * 100) / self.cache.len()) > 70 {
             self.increase_cache();
         }
     }
-
 
     /// Number of elements in map.
     ///
     pub fn len(&self) -> usize {
         self.count as usize
     }
-
 
     /// Force count number of slots filled.
     ///
@@ -405,19 +399,15 @@ impl<V> IntMap<V> {
         count
     }
 
-
-
     pub fn load_rate(&self) -> f64 {
         (self.count as f64) / (self.cache.len() as f64) * 100f64
     }
-
 
     /// Total number of slots available.
     ///
     pub fn capacity(&self) -> usize {
         self.cache.len()
     }
-
 
     pub fn assert_count(&self) -> bool {
         let mut count = 0;
@@ -430,7 +420,6 @@ impl<V> IntMap<V> {
 
         self.count == count
     }
-
 
     pub fn collisions(&self) -> IntMap<u64> {
         let mut map = IntMap::new();
@@ -451,9 +440,7 @@ impl<V> IntMap<V> {
 
         map
     }
-
 }
-
 
 use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;
@@ -469,14 +456,14 @@ pub struct Iter<'a, K: 'a, V: 'a> {
 impl<'a, K, V> Iter<'a, K, V> {
     pub fn new(vec: &'a Vec<Vec<(K, V)>>) -> Self {
         let mut outer = vec.iter();
-        let inner = outer.next()
-                         .map(|v| v.iter())
-                         .unwrap_or_else(|| (&[]).iter());
+        let inner = { outer.next() }
+            .map(|v| v.iter())
+            .unwrap_or_else(|| (&[]).iter());
 
         Iter {
             outer: outer,
             inner: inner,
-         }
+        }
     }
 }
 
@@ -499,7 +486,6 @@ impl<'a, K, V> Iterator for Iter<'a, K, V> {
     }
 }
 
-
 // ***************** Iter Mut *********************
 
 pub struct IterMut<'a, K: 'a, V: 'a> {
@@ -510,9 +496,9 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
 impl<'a, K, V> IterMut<'a, K, V> {
     fn new(vec: &'a mut Vec<Vec<(K, V)>>) -> IterMut<'a, K, V> {
         let mut outer = vec.iter_mut();
-        let inner = outer.next()
-                         .map(|v| v.iter_mut())
-                         .unwrap_or_else(|| (&mut []).iter_mut() );
+        let inner = { outer.next() }
+            .map(|v| v.iter_mut())
+            .unwrap_or_else(|| (&mut []).iter_mut());
 
         IterMut {
             outer: outer,
@@ -520,7 +506,6 @@ impl<'a, K, V> IterMut<'a, K, V> {
         }
     }
 }
-
 
 impl<'a, K, V> Iterator for IterMut<'a, K, V> {
     type Item = (&'a K, &'a mut V);
@@ -541,38 +526,48 @@ impl<'a, K, V> Iterator for IterMut<'a, K, V> {
     }
 }
 
-
 // ***************** Values Iter *********************
 
-pub struct Values<'a, K:'a, V: 'a> {
-    inner: Iter<'a, K, V>
+pub struct Values<'a, K: 'a, V: 'a> {
+    inner: Iter<'a, K, V>,
 }
-
 
 impl<'a, K, V> Iterator for Values<'a, K, V> {
     type Item = &'a V;
 
-    #[inline] fn next(&mut self) -> Option<&'a V> { self.inner.next().map(|kv| kv.1) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+    #[inline]
+    fn next(&mut self) -> Option<&'a V> {
+        self.inner.next().map(|kv| kv.1)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 // ***************** Keys Iter *********************
 
 pub struct Keys<'a, K: 'a, V: 'a> {
-    inner: Iter<'a, K, V>
+    inner: Iter<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for Keys<'a, K, V> {
     type Item = &'a K;
 
-    #[inline] fn next(&mut self) -> Option<&'a K> { self.inner.next().map(|kv| kv.0) }
-    #[inline] fn size_hint(&self) -> (usize, Option<usize>) { self.inner.size_hint() }
+    #[inline]
+    fn next(&mut self) -> Option<&'a K> {
+        self.inner.next().map(|kv| kv.0)
+    }
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        self.inner.size_hint()
+    }
 }
 
 // ***************** Values Mut *********************
 
-pub struct ValuesMut<'a, K:'a, V: 'a> {
-    inner: IterMut<'a, K, V>
+pub struct ValuesMut<'a, K: 'a, V: 'a> {
+    inner: IterMut<'a, K, V>,
 }
 
 impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
@@ -611,7 +606,6 @@ impl<'a, K, V> Drain<'a, K, V> {
     }
 }
 
-
 impl<'a, K, V> Iterator for Drain<'a, K, V> {
     type Item = (K, V);
 
@@ -621,8 +615,8 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
             match self.inner.as_mut().and_then(|i| i.next()) {
                 Some(r) => {
                     *self.count -= 1;
-                    return Some((r.0, r.1))
-                },
+                    return Some((r.0, r.1));
+                }
                 None => (),
             }
 
@@ -653,14 +647,14 @@ pub struct IntoIter<K, V> {
 impl<K, V> IntoIter<K, V> {
     pub fn new(vec: Vec<Vec<(K, V)>>) -> Self {
         let mut outer = vec.into_iter();
-        let inner = outer.next()
-                         .map(|v| v.into_iter())
-                         .unwrap_or_else(|| (Vec::new()).into_iter());
+        let inner = { outer.next() }
+            .map(|v| v.into_iter())
+            .unwrap_or_else(|| (Vec::new()).into_iter());
 
         IntoIter {
             outer: outer,
             inner: inner,
-         }
+        }
     }
 }
 
@@ -685,8 +679,7 @@ impl<K, V> Iterator for IntoIter<K, V> {
 
 // ***************** Extend *********************
 
-impl<V> Extend<(u64, V)> for IntMap<V>
-{
+impl<V> Extend<(u64, V)> for IntMap<V> {
     #[inline]
     fn extend<T: IntoIterator<Item = (u64, V)>>(&mut self, iter: T) {
         for elem in iter {
@@ -713,17 +706,22 @@ impl<V> std::iter::FromIterator<(u64, V)> for IntMap<V> {
 
 // ***************** Equality *********************
 
-impl<V> PartialEq for IntMap<V> where V: PartialEq {
+impl<V> PartialEq for IntMap<V>
+where
+    V: PartialEq,
+{
     fn eq(&self, other: &IntMap<V>) -> bool {
         self.iter().all(|(k, a)| other.get(*k) == Some(a))
     }
 }
 impl<V> Eq for IntMap<V> where V: Eq {}
 
-
 // ***************** Debug *********************
 
-impl<V> std::fmt::Debug for IntMap<V> where V: std::fmt::Debug {
+impl<V> std::fmt::Debug for IntMap<V>
+where
+    V: std::fmt::Debug,
+{
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         fmt.debug_map().entries(self.iter()).finish()
     }

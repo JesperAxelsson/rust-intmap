@@ -1,5 +1,8 @@
 extern crate core;
 
+#[cfg(feature = "serde")]
+mod serde;
+
 use core::iter::{IntoIterator, Iterator};
 
 #[derive(Clone)]

@@ -10,7 +10,11 @@ repository = "https://github.com/JesperAxelsson/rust-intmap"
 keywords = ["hashmap", "u64", "intmap"]
 
 [dependencies]
+serde = { version = "1.0", optional = true, default-features = false }
 
 [dev-dependencies]
 rand = "0.3"
 ordermap = "0.2.7"
+
+[package.metadata.docs.rs]
+features = ["serde"]

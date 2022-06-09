@@ -1,6 +1,6 @@
 [package]
 name = "intmap"
-version = "0.7.1"
+version = "0.8.0"
 edition = "2018"
 description = "Specialized HashMap for u64 keys"
 authors = ["Jesper Axelsson <jesperaxe@gmail.com>"]

@@ -77,10 +77,8 @@ impl<V> IntMap<V> {
         let ix = self.calc_index(key);
 
         let ref mut vals = self.cache[ix];
-        for ref kv in vals.iter() {
-            if kv.0 == key {
-                return false;
-            }
+        if vals.iter().any(|kv| kv.0 == key) {
+            return false;
         }
 
         self.count += 1;
@@ -112,13 +110,7 @@ impl<V> IntMap<V> {
         let ref vals = self.cache[ix];
 
         if vals.len() > 0 {
-            for kv in vals.iter() {
-                if kv.0 == key {
-                    return Some(&kv.1);
-                }
-            }
-
-            return None;
+            return vals.iter().find_map(|kv| (kv.0 == key).then(|| &kv.1));
         } else {
             return None;
         }
@@ -149,13 +141,9 @@ impl<V> IntMap<V> {
         let ref mut vals = self.cache[ix];
 
         if vals.len() > 0 {
-            for kv in vals {
-                if kv.0 == key {
-                    return Some(&mut kv.1);
-                }
-            }
-
-            return None;
+            return vals
+                .iter_mut()
+                .find_map(|kv| (kv.0 == key).then(move || &mut kv.1));
         } else {
             return None;
         }
@@ -228,8 +216,8 @@ impl<V> IntMap<V> {
     /// assert_eq!(map.len(), 0);
     /// ```
     pub fn clear(&mut self) {
-        for i in 0..self.cache.len() {
-            self.cache[i].clear();
+        for vals in &mut self.cache {
+            vals.clear();
         }
 
         self.count = 0;
@@ -261,8 +249,8 @@ impl<V> IntMap<V> {
         F: FnMut(u64, &V) -> bool,
     {
         let mut removed = 0;
-        for i in 0..self.cache.len() {
-            self.cache[i].retain(|(k, v)| {
+        for vals in &mut self.cache {
+            vals.retain(|(k, v)| {
                 let keep = (f)(*k, v);
                 if !keep {
                     removed += 1;
@@ -353,16 +341,11 @@ impl<V> IntMap<V> {
             self.cache.push(Vec::with_capacity(0));
         }
 
-        while vec.len() > 0 {
-            let mut values = vec.pop().unwrap();
-            while values.len() > 0 {
-                if let Some(k) = values.pop() {
-                    let ix = self.calc_index(k.0);
+        for k in vec.into_iter().flatten() {
+            let ix = self.calc_index(k.0);
 
-                    let ref mut vals = self.cache[ix];
-                    vals.push(k);
-                }
-            }
+            let ref mut vals = self.cache[ix];
+            vals.push(k);
         }
 
         debug_assert!(
@@ -388,15 +371,7 @@ impl<V> IntMap<V> {
     /// Force count number of slots filled.
     ///
     pub fn load(&self) -> u64 {
-        let mut count = 0;
-
-        for i in 0..self.cache.len() {
-            if self.cache[i].len() > 0 {
-                count += 1;
-            }
-        }
-
-        count
+        self.cache.iter().filter(|vals| !vals.is_empty()).count() as u64
     }
 
     pub fn load_rate(&self) -> f64 {
@@ -410,13 +385,7 @@ impl<V> IntMap<V> {
     }
 
     pub fn assert_count(&self) -> bool {
-        let mut count = 0;
-
-        for i in 0..self.cache.len() {
-            for _ in self.cache[i].iter() {
-                count += 1;
-            }
-        }
+        let count = self.cache.iter().flatten().count();
 
         self.count == count
     }
@@ -473,15 +442,11 @@ impl<'a, K, V> Iterator for Iter<'a, K, V> {
     #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
         loop {
-            match self.inner.next() {
-                Some(r) => return Some((&r.0, &r.1)),
-                None => (),
+            if let Some(r) = self.inner.next() {
+                return Some((&r.0, &r.1));
             }
 
-            match self.outer.next() {
-                Some(v) => self.inner = v.iter(),
-                None => return None,
-            }
+            self.inner = self.outer.next()?.iter();
         }
     }
 }
@@ -513,15 +478,11 @@ impl<'a, K, V> Iterator for IterMut<'a, K, V> {
     #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
         loop {
-            match self.inner.next() {
-                Some(r) => return Some((&r.0, &mut r.1)),
-                None => (),
+            if let Some(r) = self.inner.next() {
+                return Some((&r.0, &mut r.1));
             }
 
-            match self.outer.next() {
-                Some(v) => self.inner = v.iter_mut(),
-                None => return None,
-            }
+            self.inner = self.outer.next()?.iter_mut();
         }
     }
 }
@@ -612,18 +573,12 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
     #[inline]
     fn next(&mut self) -> Option<(K, V)> {
         loop {
-            match self.inner.as_mut().and_then(|i| i.next()) {
-                Some(r) => {
-                    *self.count -= 1;
-                    return Some((r.0, r.1));
-                }
-                None => (),
+            if let Some(r) = self.inner.as_mut().and_then(|i| i.next()) {
+                *self.count -= 1;
+                return Some((r.0, r.1));
             }
 
-            match self.outer.next() {
-                Some(v) => self.inner = Some(v.drain(..)),
-                None => return None,
-            }
+            self.inner = Some(self.outer.next()?.drain(..));
         }
     }
 }
@@ -664,15 +619,11 @@ impl<K, V> Iterator for IntoIter<K, V> {
     #[inline]
     fn next(&mut self) -> Option<(K, V)> {
         loop {
-            match self.inner.next() {
-                Some(r) => return Some((r.0, r.1)),
-                None => (),
+            if let Some(r) = self.inner.next() {
+                return Some((r.0, r.1));
             }
 
-            match self.outer.next() {
-                Some(v) => self.inner = v.into_iter(),
-                None => return None,
-            }
+            self.inner = self.outer.next()?.into_iter();
         }
     }
 }

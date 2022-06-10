@@ -282,7 +282,7 @@ mod tests {
         // Insert values 0..19999
         for i in 0..count {
             match map.entry(i) {
-                Entry::Occupied(_) => panic!("unexpected, i = {}", i),
+                Entry::Occupied(_) => panic!("unexpected while insert, i = {}", i),
                 Entry::Vacant(entry) => entry.insert(i),
             };
         }
@@ -301,7 +301,7 @@ mod tests {
                     assert_eq!(*entry.get_mut(), i);
                     assert_eq!(entry.insert(count + i), i);
                 }
-                Entry::Vacant(_) => panic!("unexpected, i = {}", i),
+                Entry::Vacant(_) => panic!("unexpected while replace, i = {}", i),
             };
         }
 
@@ -317,7 +317,7 @@ mod tests {
                 Entry::Occupied(entry) => {
                     assert_eq!(entry.remove(), count + i);
                 }
-                Entry::Vacant(_) => panic!("unexpected, i = {}", i),
+                Entry::Vacant(_) => panic!("unexpected while remove, i = {}", i),
             };
         }
 

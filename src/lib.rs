@@ -1,19 +1,20 @@
-extern crate core;
-
 #[cfg(feature = "serde")]
 mod serde;
 
+mod entry;
 mod iter;
 
 use core::iter::{IntoIterator, Iterator};
 use iter::*;
 
+pub use entry::*;
+
 #[derive(Clone)]
 pub struct IntMap<V> {
-    cache: Vec<Vec<(u64, V)>>,
-    size: u32,
-    mod_mask: u64,
-    count: usize,
+    pub(crate) cache: Vec<Vec<(u64, V)>>,
+    pub(crate) size: u32,
+    pub(crate) mod_mask: u64,
+    pub(crate) count: usize,
 }
 
 impl<V> IntMap<V> {
@@ -48,7 +49,7 @@ impl<V> IntMap<V> {
             mod_mask: 0,
         };
 
-        increase_cache(&mut map.cache, &mut map.size, &mut map.mod_mask);
+        map.increase_cache();
 
         while map.lim() < capacity {
             map.increase_cache();
@@ -111,9 +112,9 @@ impl<V> IntMap<V> {
     /// assert!(map.contains_key(21));
     /// ```
     pub fn get(&self, key: u64) -> Option<&V> {
-        let cache_ix = cache_index(self.mod_mask, key);
+        let ix = self.calc_index(key);
 
-        let ref vals = self.cache[cache_ix];
+        let ref vals = self.cache[ix];
 
         if vals.len() > 0 {
             return vals.iter().find_map(|kv| (kv.0 == key).then(|| &kv.1));
@@ -323,7 +324,7 @@ impl<V> IntMap<V> {
     }
 
     #[inline]
-    fn calc_index(&self, key: u64) -> usize {
+    pub(crate) fn calc_index(&self, key: u64) -> usize {
         let hash = Self::hash_u64(key);
         // Faster modulus
         (hash & self.mod_mask) as usize
@@ -441,98 +442,9 @@ impl<V> IntMap<V> {
     /// assert_eq!(counters.get(60), Some(&1));
     /// ```
     pub fn entry(&mut self, key: u64) -> Entry<V> {
-        Entry::new(
-            key,
-            &mut self.cache,
-            &mut self.size,
-            &mut self.mod_mask,
-            &mut self.count,
-        )
+        Entry::new(key, self)
     }
 }
-
-// ***************** Internal hash stuff *********************
-#[inline]
-fn hash_u64(seed: u64) -> u64 {
-    let a = 11400714819323198549u64;
-    let val = a.wrapping_mul(seed);
-    val
-}
-
-#[inline]
-fn cache_index(mod_mask: u64, key: u64) -> usize {
-    let hash = hash_u64(key);
-    // Faster modulus
-    (hash & mod_mask) as usize
-}
-
-fn indices<V>(cache: &Vec<Vec<(u64, V)>>, mod_mask: u64, key: u64) -> (usize, Option<usize>) {
-    let cache_ix = cache_index(mod_mask, key);
-
-    let vals = &cache[cache_ix];
-
-    for (vals_ix, (k, _)) in vals.iter().enumerate() {
-        if k == &key {
-            return (cache_ix, Some(vals_ix));
-        }
-    }
-
-    (cache_ix, None)
-}
-
-#[inline]
-fn lim(size: u32) -> usize {
-    2u64.pow(size) as usize
-}
-
-#[cold]
-fn increase_cache<V>(cache: &mut Vec<Vec<(u64, V)>>, size: &mut u32, mod_mask: &mut u64) {
-    *size += 1;
-    let new_lim = lim(*size);
-    *mod_mask = (new_lim as u64) - 1;
-
-    let mut vec: Vec<Vec<(u64, V)>> = Vec::new();
-
-    vec.append(cache);
-
-    for _ in 0..new_lim {
-        cache.push(Vec::with_capacity(0));
-    }
-
-    while vec.len() > 0 {
-        let mut values = vec.pop().unwrap();
-        while values.len() > 0 {
-            if let Some(k) = values.pop() {
-                let cache_ix = cache_index(*mod_mask, k.0);
-
-                let ref mut vals = cache[cache_ix];
-                vals.push(k);
-            }
-        }
-    }
-
-    debug_assert!(
-        cache.len() == lim(*size),
-        "cache vector has the wrong length, lim: {:?} cache: {:?}",
-        lim(*size),
-        cache.len()
-    );
-}
-
-fn ensure_load_rate<V>(
-    cache: &mut Vec<Vec<(u64, V)>>,
-    size: &mut u32,
-    mod_mask: &mut u64,
-    count: usize,
-) -> bool {
-    let mut has_cache_increased = false;
-    while ((count * 100) / cache.len()) > 70 {
-        increase_cache(cache, size, mod_mask);
-        has_cache_increased = true;
-    }
-    has_cache_increased
-}
-
 
 // ***************** Equality *********************
 
@@ -554,161 +466,5 @@ where
 {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
         fmt.debug_map().entries(self.iter()).finish()
-    }
-}
-
-// ***************** Entry *********************
-
-/// A view into a single entry in a [`IntMap`], which may either be vacant or occupied.
-///
-/// The entry can be constructed by calling [`IntMap::entry`] with a key. It allows inspection
-/// and in-place manipulation of its value without repeated lookups.
-pub enum Entry<'a, V: 'a> {
-    /// The entry is occupied.
-    Occupied(OccupiedEntry<'a, V>),
-    /// The entry is vacant.
-    Vacant(VacantEntry<'a, V>),
-}
-
-impl<'a, V> Entry<'a, V> {
-    #[inline]
-    fn new(
-        key: u64,
-        cache: &'a mut Vec<Vec<(u64, V)>>,
-        size: &'a mut u32,
-        mod_mask: &'a mut u64,
-        count: &'a mut usize,
-    ) -> Self {
-        let (cache_ix, val_ix) = indices(cache, *mod_mask, key);
-
-        match val_ix {
-            Some(vals_ix) => Entry::Occupied(OccupiedEntry {
-                vals_ix,
-                vals: &mut cache[cache_ix],
-                count,
-            }),
-            None => Entry::Vacant(VacantEntry {
-                key,
-                cache_ix,
-                cache,
-                size,
-                mod_mask,
-                count,
-            }),
-        }
-    }
-}
-
-/// A view into an occupied entry in a [`IntMap`]. It is part of the [`Entry`] enum.
-pub struct OccupiedEntry<'a, V: 'a> {
-    // Index to vals, guaranteed to be valid
-    vals_ix: usize,
-    // Element of IntMap::cache, guaranteed to be non-empty
-    vals: &'a mut Vec<(u64, V)>,
-    // IntMap::count, guaranteed to be non-zero
-    count: &'a mut usize,
-}
-
-impl<'a, V> OccupiedEntry<'a, V> {
-    /// Gets a reference to the value in the entry.
-    pub fn get(&self) -> &V {
-        // Safety: We didn't modify the cache since we calculated the index
-        unsafe { &self.vals.get_unchecked(self.vals_ix).1 }
-    }
-
-    /// Gets a mutable reference to the value in the entry.
-    pub fn get_mut(&mut self) -> &mut V {
-        // Safety: We didn't modify the cache since we calculated the index
-        unsafe { &mut self.vals.get_unchecked_mut(self.vals_ix).1 }
-    }
-
-    /// Converts the entry into a mutable reference to the value in the entry with a
-    /// lifetime bound to the [`IntMap`] itself.
-    pub fn into_mut(self) -> &'a mut V {
-        // Safety: We didn't modify the cache since we calculated the index
-        unsafe { &mut self.vals.get_unchecked_mut(self.vals_ix).1 }
-    }
-
-    /// Sets the value of the entry and returns the old value.
-    pub fn insert(&mut self, value: V) -> V {
-        std::mem::replace(&mut self.vals[self.vals_ix].1, value)
-    }
-
-    /// Removes the value out of the entry and returns it.
-    pub fn remove(self) -> V {
-        // Warning: We modify the cache here, so the index is now invalid
-        *self.count -= 1;
-        let kv = self.vals.swap_remove(self.vals_ix);
-
-        kv.1
-    }
-}
-
-/// A view into a vacant entry in a [`IntMap`]. It is part of the [`Entry`] enum.
-pub struct VacantEntry<'a, V: 'a> {
-    key: u64,
-    // Index to cache, guaranteed to be valid
-    cache_ix: usize,
-    // IntMap::cache, guaranteed to be non-empty
-    cache: &'a mut Vec<Vec<(u64, V)>>,
-    // IntMap::size
-    size: &'a mut u32,
-    // IntMap::mod_mask
-    mod_mask: &'a mut u64,
-    // IntMap::count
-    count: &'a mut usize,
-}
-
-impl<'a, V: 'a> VacantEntry<'a, V> {
-    fn insert_impl(&mut self, value: V) -> Option<(usize, usize)> {
-        let cache_ix = self.cache_ix;
-        // Safety: We didn't modify the cache since we calculated the index
-        let vals = unsafe { self.cache.get_unchecked_mut(cache_ix) };
-        // The index to vals after we'll push the value
-        let vals_ix = vals.len();
-
-        // We modify the cache here, but the indices are still valid
-        *self.count += 1;
-        vals.push((self.key, value));
-
-        let has_cache_increased = if (*self.count & 4) == 4 {
-            // Warning: If this functions returns true, the cache has been increased and
-            // both indices are invalid
-            ensure_load_rate(self.cache, self.size, self.mod_mask, *self.count)
-        } else {
-            false
-        };
-
-        // Returns the indices if they are still valid
-        if has_cache_increased {
-            None
-        } else {
-            Some((cache_ix, vals_ix))
-        }
-    }
-
-    /// Inserts a value into the entry and returns a mutable reference to it.
-    pub fn insert(mut self, value: V) -> &'a mut V {
-        let (new_cache_ix, new_val_ix) = match self.insert_impl(value) {
-            Some((cache_ix, vals_ix)) => {
-                // Indices are still valid
-                (cache_ix, vals_ix)
-            }
-            None => {
-                // The old indices are not valid anymore, we need to recalculate them
-                let (cache_ix, val_ix) = indices(self.cache, *self.mod_mask, self.key);
-                // Safety: We inserted the key and value, so the index must be available
-                (cache_ix, unsafe { val_ix.unwrap_unchecked() })
-            }
-        };
-
-        // Safety: We ensured that either the old indices are valid or new indices were calculated
-        unsafe {
-            &mut self
-                .cache
-                .get_unchecked_mut(new_cache_ix)
-                .get_unchecked_mut(new_val_ix)
-                .1
-        }
     }
 }

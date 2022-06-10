@@ -414,27 +414,23 @@ impl<V> IntMap<V> {
     }
 }
 
+use std::iter::FlatMap as IterFlatMap;
+use std::iter::Flatten as IterFlatten;
 use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;
+use std::vec::Drain as VecDrain;
 use std::vec::IntoIter as VecIntoIter;
 
 // ***************** Iter *********************
 
 pub struct Iter<'a, K: 'a, V: 'a> {
-    outer: SliceIter<'a, Vec<(K, V)>>,
-    inner: SliceIter<'a, (K, V)>,
+    inner: IterFlatten<SliceIter<'a, Vec<(K, V)>>>,
 }
 
 impl<'a, K, V> Iter<'a, K, V> {
     pub fn new(vec: &'a Vec<Vec<(K, V)>>) -> Self {
-        let mut outer = vec.iter();
-        let inner = { outer.next() }
-            .map(|v| v.iter())
-            .unwrap_or_else(|| (&[]).iter());
-
         Iter {
-            outer: outer,
-            inner: inner,
+            inner: vec.iter().flatten(),
         }
     }
 }
@@ -444,33 +440,20 @@ impl<'a, K, V> Iterator for Iter<'a, K, V> {
 
     #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a V)> {
-        loop {
-            if let Some(r) = self.inner.next() {
-                return Some((&r.0, &r.1));
-            }
-
-            self.inner = self.outer.next()?.iter();
-        }
+        self.inner.next().map(|r| (&r.0, &r.1))
     }
 }
 
 // ***************** Iter Mut *********************
 
 pub struct IterMut<'a, K: 'a, V: 'a> {
-    outer: SliceIterMut<'a, Vec<(K, V)>>,
-    inner: SliceIterMut<'a, (K, V)>,
+    inner: IterFlatten<SliceIterMut<'a, Vec<(K, V)>>>,
 }
 
 impl<'a, K, V> IterMut<'a, K, V> {
     fn new(vec: &'a mut Vec<Vec<(K, V)>>) -> IterMut<'a, K, V> {
-        let mut outer = vec.iter_mut();
-        let inner = { outer.next() }
-            .map(|v| v.iter_mut())
-            .unwrap_or_else(|| (&mut []).iter_mut());
-
         IterMut {
-            outer: outer,
-            inner: inner,
+            inner: vec.iter_mut().flatten(),
         }
     }
 }
@@ -480,13 +463,7 @@ impl<'a, K, V> Iterator for IterMut<'a, K, V> {
 
     #[inline]
     fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
-        loop {
-            if let Some(r) = self.inner.next() {
-                return Some((&r.0, &mut r.1));
-            }
-
-            self.inner = self.outer.next()?.iter_mut();
-        }
+        self.inner.next().map(|r| (&r.0, &mut r.1))
     }
 }
 
@@ -550,22 +527,18 @@ impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
 
 pub struct Drain<'a, K: 'a, V: 'a> {
     count: &'a mut usize,
-    outer: SliceIterMut<'a, Vec<(K, V)>>,
-    inner: Option<std::vec::Drain<'a, (K, V)>>,
+    inner: IterFlatMap<
+        SliceIterMut<'a, Vec<(K, V)>>,
+        VecDrain<'a, (K, V)>,
+        fn(&mut Vec<(K, V)>) -> VecDrain<(K, V)>,
+    >,
 }
 
 impl<'a, K, V> Drain<'a, K, V> {
     fn new(vec: &'a mut Vec<Vec<(K, V)>>, count: &'a mut usize) -> Drain<'a, K, V> {
-        let mut outer = vec.iter_mut();
-        let inner = outer
-            .next()
-            .map(|v| Some(v.drain(..)))
-            .unwrap_or_else(|| None);
-
         Drain {
-            count: count,
-            outer: outer,
-            inner: inner,
+            count,
+            inner: vec.iter_mut().flat_map(|v| v.drain(..)),
         }
     }
 }
@@ -575,14 +548,11 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
 
     #[inline]
     fn next(&mut self) -> Option<(K, V)> {
-        loop {
-            if let Some(r) = self.inner.as_mut().and_then(|i| i.next()) {
-                *self.count -= 1;
-                return Some((r.0, r.1));
-            }
-
-            self.inner = Some(self.outer.next()?.drain(..));
+        let next = self.inner.next();
+        if next.is_some() {
+            *self.count -= 1;
         }
+        next
     }
 }
 
@@ -598,20 +568,13 @@ impl<V> IntoIterator for IntMap<V> {
 }
 
 pub struct IntoIter<K, V> {
-    outer: VecIntoIter<Vec<(K, V)>>,
-    inner: VecIntoIter<(K, V)>,
+    inner: IterFlatten<VecIntoIter<Vec<(K, V)>>>,
 }
 
 impl<K, V> IntoIter<K, V> {
     pub fn new(vec: Vec<Vec<(K, V)>>) -> Self {
-        let mut outer = vec.into_iter();
-        let inner = { outer.next() }
-            .map(|v| v.into_iter())
-            .unwrap_or_else(|| (Vec::new()).into_iter());
-
         IntoIter {
-            outer: outer,
-            inner: inner,
+            inner: vec.into_iter().flatten(),
         }
     }
 }
@@ -621,13 +584,7 @@ impl<K, V> Iterator for IntoIter<K, V> {
 
     #[inline]
     fn next(&mut self) -> Option<(K, V)> {
-        loop {
-            if let Some(r) = self.inner.next() {
-                return Some((r.0, r.1));
-            }
-
-            self.inner = self.outer.next()?.into_iter();
-        }
+        self.inner.next()
     }
 }
 

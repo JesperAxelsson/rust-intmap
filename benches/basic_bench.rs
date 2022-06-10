@@ -7,15 +7,13 @@ extern crate test;
 extern crate ordermap;
 
 use intmap::IntMap;
-use std::collections::HashMap;
 use ordermap::OrderMap;
-
+use std::collections::HashMap;
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use test::Bencher;
-
 
     const VEC_COUNT: usize = 1000;
 
@@ -30,27 +28,24 @@ mod tests {
             map.clear();
 
             for s in data.iter() {
-               test::black_box(map.insert(s, s));
+                test::black_box(map.insert(s, s));
             }
-
         });
     }
 
     #[bench]
     fn u64_get_built_in(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
-        let mut map: HashMap<&u64, &u64>  = HashMap::with_capacity(data.len());
+        let mut map: HashMap<&u64, &u64> = HashMap::with_capacity(data.len());
 
         for s in data.iter() {
-            test::black_box(map.insert(s, s)
-            );
+            test::black_box(map.insert(s, s));
         }
 
         b.iter(|| {
             for s in data.iter() {
                 test::black_box({
                     map.contains_key(s);
-
                 });
             }
         });
@@ -67,20 +62,18 @@ mod tests {
             map.clear();
 
             for s in data.iter() {
-               test::black_box(map.insert(s, s));
+                test::black_box(map.insert(s, s));
             }
-
         });
     }
 
     #[bench]
     fn u64_get_ordermap(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
-        let mut map: OrderMap<&u64, &u64>  = OrderMap::with_capacity(data.len());
+        let mut map: OrderMap<&u64, &u64> = OrderMap::with_capacity(data.len());
 
         for s in data.iter() {
-            test::black_box(map.insert(s, s)
-            );
+            test::black_box(map.insert(s, s));
         }
 
         b.iter(|| {
@@ -91,7 +84,6 @@ mod tests {
             }
         });
     }
-
 
     // ********** Intmap **********
 
@@ -104,11 +96,10 @@ mod tests {
         b.iter(|| {
             map.clear();
             for s in data.iter() {
-                test::black_box({map.insert(*s, s)});
+                test::black_box({ map.insert(*s, s) });
             }
         });
     }
-
 
     #[bench]
     fn u64_get_intmap(b: &mut Bencher) {
@@ -128,7 +119,6 @@ mod tests {
 
     // ********** Misc **********
 
-
     fn get_random_range(count: usize) -> Vec<u64> {
         use rand::{Rng, SeedableRng, StdRng};
 
@@ -146,5 +136,4 @@ mod tests {
 
         vec
     }
-
 }

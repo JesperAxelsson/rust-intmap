@@ -1,4 +1,3 @@
-
 extern crate rand;
 
 extern crate intmap;
@@ -50,7 +49,11 @@ mod tests {
         assert_eq!(map.len(), count);
 
         for s in data.iter() {
-            assert!(map.contains_key(*s), "intmap contains_key failed! key: {:?}", s);
+            assert!(
+                map.contains_key(*s),
+                "intmap contains_key failed! key: {:?}",
+                s
+            );
         }
 
         assert_eq!(map.len(), count);
@@ -140,9 +143,8 @@ mod tests {
         }
 
         for n in 0..count {
-            assert_eq!(n+1, *map.get(n).expect("Failed to get number!"));
+            assert_eq!(n + 1, *map.get(n).expect("Failed to get number!"));
         }
-
     }
 
     #[test]
@@ -159,9 +161,8 @@ mod tests {
         }
 
         for n in 0..count {
-            assert_eq!(n+1, *map.get(n).expect("Failed to get number!"));
+            assert_eq!(n + 1, *map.get(n).expect("Failed to get number!"));
         }
-
     }
 
     #[test]
@@ -223,7 +224,6 @@ mod tests {
         }
     }
 
-    
     #[test]
     fn extend_two_maps() {
         let count = 20_000;
@@ -234,7 +234,7 @@ mod tests {
             map_1.insert(i, i);
         }
 
-        for i in count..(count*2) {
+        for i in count..(count * 2) {
             map_2.insert(i, i);
         }
 
@@ -251,9 +251,7 @@ mod tests {
     fn from_iter_collect() {
         let count = 20_000;
 
-        let map = (0..count)
-            .map(|i| (i, i * i))
-            .collect::<IntMap<_>>();
+        let map = (0..count).map(|i| (i, i * i)).collect::<IntMap<_>>();
 
         for k in 0..count {
             assert!(map.contains_key(k));
@@ -268,14 +266,10 @@ mod tests {
     fn map_equality() {
         let count = 5_000;
 
-        let map_1 = (0..count)
-            .map(|i| (i, i * i))
-            .collect::<IntMap<_>>();
-        
-        let map_2 = (0..count).rev()
-            .map(|i| (i, i * i))
-            .collect::<IntMap<_>>();
-        
+        let map_1 = (0..count).map(|i| (i, i * i)).collect::<IntMap<_>>();
+
+        let map_2 = (0..count).rev().map(|i| (i, i * i)).collect::<IntMap<_>>();
+
         assert_eq!(map_1, map_2);
     }
 

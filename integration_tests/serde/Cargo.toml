@@ -1,0 +1,10 @@
+[package]
+name = "intmap-integration-test-serde"
+version = "0.1.0"
+edition = "2018"
+license = "MIT"
+
+[dev-dependencies]
+intmap = { path = "../..", features = ["serde"] }
+proptest = "1.0.0"
+serde_json = "1"

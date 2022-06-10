@@ -11,10 +11,11 @@ pub use entry::*;
 
 #[derive(Clone)]
 pub struct IntMap<V> {
-    pub(crate) cache: Vec<Vec<(u64, V)>>,
-    pub(crate) size: u32,
-    pub(crate) mod_mask: u64,
-    pub(crate) count: usize,
+    cache: Vec<Vec<(u64, V)>>,
+    size: u32,
+    mod_mask: u64,
+    count: usize,
+    load_factor: usize,
 }
 
 impl<V> IntMap<V> {
@@ -47,6 +48,7 @@ impl<V> IntMap<V> {
             size: 0,
             count: 0,
             mod_mask: 0,
+            load_factor: 700, // 70.0%
         };
 
         map.increase_cache();
@@ -56,6 +58,28 @@ impl<V> IntMap<V> {
         }
 
         map
+    }
+
+    /// Sets load rate of IntMap rounded to the first decimal point.
+    ///
+    /// Values above 1.0 is allowed.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
+    /// map.set_load_factor(0.909); // Sets load factor to 90.9%
+    /// ```
+    pub fn set_load_factor(&mut self, load_factor: f32) {
+        self.load_factor = (load_factor * 1000.) as usize;
+        self.ensure_load_rate();
+    }
+
+    /// Returns current load_factor
+    pub fn get_load_factor(&self) -> f32 {
+        self.load_factor as f32 / 1000.
     }
 
     /// Ensures that the IntMap has space for at least `additional` more elements
@@ -364,7 +388,8 @@ impl<V> IntMap<V> {
     }
 
     fn ensure_load_rate(&mut self) {
-        while ((self.count * 100) / self.cache.len()) > 70 {
+        // Tried using floats here but insert performance tanked.
+        while ((self.count * 1000) / self.cache.len()) > self.load_factor {
             self.increase_cache();
         }
     }

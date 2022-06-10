@@ -408,9 +408,46 @@ mod tests {
 
         let mut map: IntMap<u64> = IntMap::new();
         for i in 0..3 {
-            map.insert(i, i+1);
+            map.insert(i, i + 1);
         }
 
-        assert_eq!(format!("{:?}", map ) , "{0: 1, 1: 2, 2: 3}");
+        assert_eq!(format!("{:?}", map), "{0: 1, 1: 2, 2: 3}");
+    }
+
+    #[test]
+    fn load_factor() {
+        let mut map: IntMap<u64> = IntMap::new();
+
+        map.set_load_factor(0.1);
+        assert_eq!(map.get_load_factor(), 0.1);
+
+        for i in 0..12 {
+            map.insert(i, i);
+        }
+
+        assert_eq!(map.capacity(), 128);
+        assert!(map.load_rate() <= 10.);
+        assert!(map.collisions().is_empty());
+
+        let mut map: IntMap<u64> = IntMap::new();
+
+        map.set_load_factor(2.);
+        assert_eq!(map.get_load_factor(), 2.);
+
+        for i in 0..16 {
+            map.insert(i, i);
+        }
+
+        println!("Load {}", map.load_rate());
+        println!("factor {:?}", map.collisions());
+
+        assert_eq!(map.capacity(), 8);
+        assert!(map.load_rate() <= 200.);
+        assert_eq!(format!("{:?}", map.collisions()), "{2: 8}");
+    }
+
+    #[test]
+    fn failing_test() {
+        assert_eq!(true, false);
     }
 }

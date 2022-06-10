@@ -1,5 +1,8 @@
 # Changelog
 
+## [1.1.0] Unreleased
+- Implement Default for IntMap
+
 ## [1.0.0] 2022-06-10
 - Bump to 1.0 as we are feature complete!
 - Added Entry api [@jakoschiko](https://github.com/jakoschiko) 

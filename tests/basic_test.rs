@@ -341,6 +341,15 @@ mod tests {
     }
 
     #[test]
+    fn map_inequality() {
+        let map_1 = (0..10).map(|i| (i, i * i)).collect::<IntMap<_>>();
+        let map_2 = (0..5).rev().map(|i| (i, i * i)).collect::<IntMap<_>>();
+
+        assert_ne!(map_1, map_2);
+        assert_ne!(map_2, map_1);
+    }
+
+    #[test]
     fn entry_api() {
         let count = 20_000;
         let data: Vec<u64> = (0..count).collect();

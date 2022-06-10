@@ -445,9 +445,4 @@ mod tests {
         assert!(map.load_rate() <= 200.);
         assert_eq!(format!("{:?}", map.collisions()), "{2: 8}");
     }
-
-    #[test]
-    fn failing_test() {
-        assert_eq!(true, false);
-    }
 }

@@ -48,7 +48,7 @@ impl<V> IntMap<V> {
             size: 0,
             count: 0,
             mod_mask: 0,
-            load_factor: 700, // 70.0%
+            load_factor: 909, // 90.9%
         };
 
         map.increase_cache();

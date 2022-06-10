@@ -67,11 +67,79 @@ mod tests {
     }
 
     #[test]
+    fn reserve() {
+        let mut map: IntMap<bool> = IntMap::new();
+        map.reserve(9001);
+    }
+
+    #[test]
+    fn add_duplicate() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            assert_eq!(map.insert(i, format!("item: {:?}", i)), true);
+            assert_eq!(map.insert(i, format!("item: {:?}", i)), false);
+        }
+    }
+
+    #[test]
+    fn get_value_map() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            assert_eq!(map.insert(i, i + 1), true);
+        }
+
+        for i in 0..20_000 {
+            assert_eq!(map.contains_key(i), true);
+            assert_eq!(*map.get(i).unwrap(), i + 1);
+            assert_eq!(*map.get_mut(i).unwrap(), i + 1);
+            assert_eq!(map.remove(i).unwrap(), i + 1);
+        }
+
+        for i in 0..20_000 {
+            assert_eq!(map.contains_key(i), false);
+            assert_eq!(map.remove(i), None);
+        }
+
+        assert!(map.is_empty());
+    }
+
+    #[test]
+    fn get_value_not_in_map() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            assert_eq!(map.insert(i, format!("item: {:?}", i)), true);
+        }
+
+        for i in 20_000..40_000 {
+            assert_eq!(map.get(i), None);
+            assert_eq!(map.get_mut(i), None);
+        }
+    }
+
+    #[test]
     fn add_string() {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
             map.insert(i, format!("item: {:?}", i));
+        }
+    }
+
+    #[test]
+    fn retain() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            map.insert(i, format!("item: {:?}", i));
+        }
+
+        map.retain(|k, _v| k > 10_000);
+
+        for i in 10_001..20_000 {
+            assert_eq!(map.contains_key(i), true);
         }
     }
 
@@ -299,6 +367,7 @@ mod tests {
                     assert_eq!(*entry.get(), i);
                     assert_eq!(*entry.get_mut(), i);
                     assert_eq!(entry.insert(count + i), i);
+                    assert_eq!(*entry.into_mut(), count + i);
                 }
                 Entry::Vacant(_) => panic!("unexpected while replace, i = {}", i),
             };
@@ -321,5 +390,27 @@ mod tests {
         }
 
         assert_eq!(map.len(), 0);
+    }
+
+    #[test]
+    fn test_debug_features() {
+        let count = 20_000;
+        let mut map: IntMap<u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        assert_eq!(map.load(), 20_000);
+        assert_eq!(map.capacity(), 32_768);
+        assert!(map.load_rate() > 0.70);
+        assert!(map.collisions().is_empty());
+
+        let mut map: IntMap<u64> = IntMap::new();
+        for i in 0..3 {
+            map.insert(i, i+1);
+        }
+
+        assert_eq!(format!("{:?}", map ) , "{0: 1, 1: 2, 2: 3}");
     }
 }

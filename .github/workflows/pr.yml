@@ -1,0 +1,50 @@
+name: Check and Test
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust: [ 1.58.1, 1.61.0 ]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Cache Cargo
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ matrix.build }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ matrix.build }}-cargo-
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable -y
+          source $HOME/.cargo/env
+          rustup update ${{ matrix.rust }} --no-self-update
+          rustup default ${{ matrix.rust }}
+          rustup component add rustfmt
+
+      - name: Check Format
+        run: $HOME/.cargo/bin/cargo fmt --all -- --check
+
+      - name: Test
+        run: $HOME/.cargo/bin/cargo test
+        env:
+          RUST_BACKTRACE: 1
+
+      - name: Integration test
+        env:
+          RUST_BACKTRACE: 1
+        run: |
+          for p in integration_tests/*; do
+              pushd $p
+              $HOME/.cargo/bin/cargo test
+              popd
+          done
+

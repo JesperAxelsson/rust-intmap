@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.0] 2022-06-10
+- Bump to 1.0 as we are feature complete!
+- Added Entry api [@jakoschiko](https://github.com/jakoschiko) 
+
+
 ## [0.8.0] 2022-06-09
 
 ### Added 

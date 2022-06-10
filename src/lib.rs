@@ -472,6 +472,7 @@ where
 {
     fn eq(&self, other: &IntMap<V>) -> bool {
         self.iter().all(|(k, a)| other.get(*k) == Some(a))
+            && other.iter().all(|(k, a)| self.get(*k) == Some(a))
     }
 }
 impl<V> Eq for IntMap<V> where V: Eq {}

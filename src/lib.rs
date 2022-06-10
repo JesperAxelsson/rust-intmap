@@ -48,7 +48,7 @@ impl<V> IntMap<V> {
             size: 0,
             count: 0,
             mod_mask: 0,
-            load_factor: 700, // 70.0%
+            load_factor: 909, // 90.9%
         };
 
         map.increase_cache();
@@ -107,13 +107,14 @@ impl<V> IntMap<V> {
     pub fn insert(&mut self, key: u64, value: V) -> bool {
         let ix = self.calc_index(key);
 
-        let ref mut vals = self.cache[ix];
+        let vals = &mut self.cache[ix];
         if vals.iter().any(|kv| kv.0 == key) {
             return false;
         }
 
         self.count += 1;
         vals.push((key, value));
+
         if (self.count & 4) == 4 {
             self.ensure_load_rate();
         }
@@ -138,13 +139,9 @@ impl<V> IntMap<V> {
     pub fn get(&self, key: u64) -> Option<&V> {
         let ix = self.calc_index(key);
 
-        let ref vals = self.cache[ix];
+        let vals = &self.cache[ix];
 
-        if vals.len() > 0 {
-            return vals.iter().find_map(|kv| (kv.0 == key).then(|| &kv.1));
-        } else {
-            return None;
-        }
+        vals.iter().find_map(|kv| (kv.0 == key).then(|| &kv.1))
     }
 
     /// Get mutable value from the IntMap.
@@ -169,15 +166,11 @@ impl<V> IntMap<V> {
     pub fn get_mut(&mut self, key: u64) -> Option<&mut V> {
         let ix = self.calc_index(key);
 
-        let ref mut vals = self.cache[ix];
+        let vals = &mut self.cache[ix];
 
-        if vals.len() > 0 {
-            return vals
-                .iter_mut()
-                .find_map(|kv| (kv.0 == key).then(move || &mut kv.1));
-        } else {
-            return None;
-        }
+        return vals
+            .iter_mut()
+            .find_map(|kv| (kv.0 == key).then(move || &mut kv.1));
     }
 
     /// Remove value from the IntMap.
@@ -199,21 +192,17 @@ impl<V> IntMap<V> {
 
         let ref mut vals = self.cache[ix];
 
-        if vals.len() > 0 {
-            for i in 0..vals.len() {
-                let peek = vals[i].0;
+        for i in 0..vals.len() {
+            let peek = vals[i].0;
 
-                if peek == key {
-                    self.count -= 1;
-                    let kv = vals.swap_remove(i);
-                    return Some(kv.1);
-                }
+            if peek == key {
+                self.count -= 1;
+                let kv = vals.swap_remove(i);
+                return Some(kv.1);
             }
-
-            return None;
-        } else {
-            return None;
         }
+
+        return None;
     }
 
     /// Returns true if key is in map.
@@ -228,10 +217,7 @@ impl<V> IntMap<V> {
     /// assert!(map.contains_key(21));
     /// ```
     pub fn contains_key(&self, key: u64) -> bool {
-        match self.get(key) {
-            Some(_) => true,
-            None => false,
-        }
+        self.get(key).is_some()
     }
 
     /// Removes all elements from map.

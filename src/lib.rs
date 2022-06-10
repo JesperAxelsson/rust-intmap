@@ -27,6 +27,7 @@ impl<V> IntMap<V> {
     /// use intmap::IntMap;
     ///
     /// let mut map: IntMap<u64> = IntMap::new();
+    /// assert_eq!(map, IntMap::default());
     /// ```
     pub fn new() -> Self {
         IntMap::with_capacity(4)
@@ -454,6 +455,12 @@ impl<V> IntMap<V> {
     /// ```
     pub fn entry(&mut self, key: u64) -> Entry<V> {
         Entry::new(key, self)
+    }
+}
+
+impl<V> Default for IntMap<V> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

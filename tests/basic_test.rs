@@ -9,12 +9,11 @@ mod tests {
     use super::*;
 
     fn get_random_range(count: usize) -> Vec<u64> {
-        use rand::{Rng, SeedableRng, StdRng};
+        use rand::prelude::StdRng;
+        use rand::{Rng, SeedableRng};
 
         let mut vec = Vec::new();
-
-        let seed: &[_] = &[4, 2, 4, 2];
-        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        let mut rng = StdRng::seed_from_u64(4242);
 
         for _ in 0..count {
             vec.push(rng.gen::<u64>());

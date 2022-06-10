@@ -4,10 +4,10 @@ extern crate intmap;
 extern crate rand;
 extern crate test;
 
-extern crate ordermap;
+extern crate indexmap;
 
+use indexmap::IndexMap;
 use intmap::IntMap;
-use ordermap::OrderMap;
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -52,12 +52,12 @@ mod tests {
         });
     }
 
-    // ********** Ordermap **********
+    // ********** IndexMap **********
 
     #[bench]
-    fn u64_insert_ordermap(b: &mut Bencher) {
+    fn u64_insert_indexmap(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
-        let mut map = OrderMap::with_capacity(data.len());
+        let mut map = IndexMap::with_capacity(data.len());
 
         b.iter(|| {
             map.clear();
@@ -69,9 +69,9 @@ mod tests {
     }
 
     #[bench]
-    fn u64_get_ordermap(b: &mut Bencher) {
+    fn u64_get_indexmap(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
-        let mut map: OrderMap<&u64, &u64> = OrderMap::with_capacity(data.len());
+        let mut map: IndexMap<&u64, &u64> = IndexMap::with_capacity(data.len());
 
         for s in data.iter() {
             test::black_box(map.insert(s, s));
@@ -139,12 +139,11 @@ mod tests {
     // ********** Misc **********
 
     fn get_random_range(count: usize) -> Vec<u64> {
-        use rand::{Rng, SeedableRng, StdRng};
+        use rand::prelude::StdRng;
+        use rand::{Rng, SeedableRng};
 
         let mut vec = Vec::new();
-
-        let seed: &[_] = &[4, 2, 4, 2];
-        let mut rng: StdRng = SeedableRng::from_seed(seed);
+        let mut rng = StdRng::seed_from_u64(4242);
 
         for _ in 0..count {
             vec.push(rng.gen::<u64>());

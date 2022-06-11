@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.1.0] Unreleased
+## [1.1.0] 2022-06-11
 
 ### Added 
 - Implement Default for IntMap [@roman-kashitsyn](https://github.com/roman-kashitsyn) 

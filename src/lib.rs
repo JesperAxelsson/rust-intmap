@@ -351,13 +351,8 @@ impl<V> IntMap<V> {
         let new_lim = self.lim();
         self.mod_mask = (new_lim as u64) - 1;
 
-        let mut vec: Vec<Vec<(u64, V)>> = Vec::new();
-
-        vec.append(&mut self.cache);
-
-        for _ in 0..new_lim {
-            self.cache.push(Vec::with_capacity(0));
-        }
+        let mut vec: Vec<Vec<(u64, V)>> = (0..new_lim).map(|_| Vec::new()).collect();
+        std::mem::swap(&mut self.cache, &mut vec);
 
         for k in vec.into_iter().flatten() {
             let ix = self.calc_index(k.0);

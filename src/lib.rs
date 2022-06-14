@@ -191,7 +191,7 @@ impl<V> IntMap<V> {
     pub fn remove(&mut self, key: u64) -> Option<V> {
         let ix = self.calc_index(key);
 
-        let ref mut vals = self.cache[ix];
+        let vals = &mut self.cache[ix];
 
         for i in 0..vals.len() {
             let peek = vals[i].0;
@@ -203,7 +203,7 @@ impl<V> IntMap<V> {
             }
         }
 
-        return None;
+        None
     }
 
     /// Returns true if key is in map.
@@ -293,7 +293,7 @@ impl<V> IntMap<V> {
     /// map.remove(21);
     /// assert!(map.is_empty());
     /// ```
-    pub fn is_empty(&mut self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.count == 0
     }
 
@@ -330,8 +330,8 @@ impl<V> IntMap<V> {
     #[inline]
     fn hash_u64(seed: u64) -> u64 {
         let a = 11400714819323198549u64;
-        let val = a.wrapping_mul(seed);
-        val
+
+        a.wrapping_mul(seed)
     }
 
     #[inline]
@@ -357,7 +357,7 @@ impl<V> IntMap<V> {
         for k in vec.into_iter().flatten() {
             let ix = self.calc_index(k.0);
 
-            let ref mut vals = self.cache[ix];
+            let vals = &mut self.cache[ix];
             vals.push(k);
         }
 

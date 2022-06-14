@@ -35,14 +35,11 @@ impl<'a, V> Entry<'a, V> {
         let cache_ix = int_map.calc_index(key);
 
         let vals = &int_map.cache[cache_ix];
+        let vals_ix = { vals.iter() }
+            .enumerate()
+            .find_map(|(vals_ix, &(k, _))| (k == key).then(|| vals_ix));
 
-        for (vals_ix, (k, _)) in vals.iter().enumerate() {
-            if k == &key {
-                return (cache_ix, Some(vals_ix));
-            }
-        }
-
-        (cache_ix, None)
+        (cache_ix, vals_ix)
     }
 }
 

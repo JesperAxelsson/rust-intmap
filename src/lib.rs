@@ -119,7 +119,6 @@ impl<V> IntMap<V> {
             None
         };
 
-        
         vals.push((key, value));
 
         if (self.count & 4) == 4 {

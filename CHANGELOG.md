@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.0.0] 2022-07-17
+
+### Added Breaking!
+- `insert` now matches behavior of built-in `insert`
+- Old `insert` has been renamed to `insert_checked`
+
 ## [1.1.0] 2022-06-11
 
 ### Added 

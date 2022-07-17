@@ -364,21 +364,20 @@ impl<V> IntMap<V> {
 
     //**** Internal hash stuff *****
 
-    #[inline]
+    #[inline(always)]
     fn hash_u64(seed: u64) -> u64 {
         let a = 11400714819323198549u64;
-
         a.wrapping_mul(seed)
     }
 
-    #[inline]
+    #[inline(always)]
     pub(crate) fn calc_index(&self, key: u64) -> usize {
         let hash = Self::hash_u64(key);
         // Faster modulus
         (hash & self.mod_mask) as usize
     }
 
-    #[inline]
+    #[inline(always)]
     fn lim(&self) -> usize {
         2u64.pow(self.size) as usize
     }
@@ -406,6 +405,7 @@ impl<V> IntMap<V> {
         );
     }
 
+    #[inline]
     fn ensure_load_rate(&mut self) {
         // Tried using floats here but insert performance tanked.
         while ((self.count * 1000) / self.cache.len()) > self.load_factor {

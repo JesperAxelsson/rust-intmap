@@ -35,7 +35,11 @@ mod tests {
         println!("Starting test");
 
         for s in data.iter() {
-            assert!(map.insert_checked(*s, *s), "intmap insert failed! ix: {:?}", s);
+            assert!(
+                map.insert_checked(*s, *s),
+                "intmap insert failed! ix: {:?}",
+                s
+            );
         }
 
         assert_eq!(map.len(), count);
@@ -78,7 +82,10 @@ mod tests {
 
         for i in 0..20_000 {
             assert_eq!(map.insert(i, format!("item: {:?}", i)), None);
-            assert_eq!(map.insert(i, format!("item: {:?}", i)), Some(format!("item: {:?}", i)));
+            assert_eq!(
+                map.insert(i, format!("item: {:?}", i)),
+                Some(format!("item: {:?}", i))
+            );
         }
     }
 

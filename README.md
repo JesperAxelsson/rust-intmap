@@ -15,6 +15,8 @@ test tests::u64_get_intmap      ... bench:       2,959 ns/iter (+/- 148)
 test tests::u64_insert_built_in ... bench:      27,666 ns/iter (+/- 1,230)
 test tests::u64_insert_intmap   ... bench:      14,047 ns/iter (+/- 1,461)
 ````
+# Breaking Changes
+2.0.0 - Changed behavior of `insert` to match std::HashMap. The old behavior is renamed to `insert_checked`. 
 
 # How to use
 Simple example.

@@ -14,7 +14,7 @@ pub struct Iter<'a, K: 'a, V: 'a> {
 }
 
 impl<'a, K, V> Iter<'a, K, V> {
-    pub(crate) fn new(vec: &'a Vec<Vec<(K, V)>>) -> Self {
+    pub(crate) fn new(vec: &'a [Vec<(K, V)>]) -> Self {
         Iter {
             inner: vec.iter().flatten(),
         }
@@ -37,7 +37,7 @@ pub struct IterMut<'a, K: 'a, V: 'a> {
 }
 
 impl<'a, K, V> IterMut<'a, K, V> {
-    pub(crate) fn new(vec: &'a mut Vec<Vec<(K, V)>>) -> IterMut<'a, K, V> {
+    pub(crate) fn new(vec: &'a mut [Vec<(K, V)>]) -> IterMut<'a, K, V> {
         IterMut {
             inner: vec.iter_mut().flatten(),
         }
@@ -145,6 +145,7 @@ impl<K, V> Iterator for IntoIter<K, V> {
 
 // ***************** Drain Iter *********************
 
+#[allow(clippy::type_complexity)]
 pub struct Drain<'a, K: 'a, V: 'a> {
     count: &'a mut usize,
     inner: IterFlatMap<
@@ -155,7 +156,7 @@ pub struct Drain<'a, K: 'a, V: 'a> {
 }
 
 impl<'a, K, V> Drain<'a, K, V> {
-    pub(crate) fn new(vec: &'a mut Vec<Vec<(K, V)>>, count: &'a mut usize) -> Drain<'a, K, V> {
+    pub(crate) fn new(vec: &'a mut [Vec<(K, V)>], count: &'a mut usize) -> Drain<'a, K, V> {
         Drain {
             count,
             inner: vec.iter_mut().flat_map(|v| v.drain(..)),

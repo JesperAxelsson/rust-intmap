@@ -16,7 +16,7 @@ pub enum Entry<'a, V: 'a> {
 impl<'a, V> Entry<'a, V> {
     #[inline]
     pub(crate) fn new(key: u64, int_map: &'a mut IntMap<V>) -> Self {
-        let (cache_ix, val_ix) = Self::indices(key, &int_map);
+        let (cache_ix, val_ix) = Self::indices(key, int_map);
 
         match val_ix {
             Some(vals_ix) => Entry::Occupied(OccupiedEntry {
@@ -24,10 +24,7 @@ impl<'a, V> Entry<'a, V> {
                 vals: &mut int_map.cache[cache_ix],
                 count: &mut int_map.count,
             }),
-            None => Entry::Vacant(VacantEntry {
-                key,
-                int_map: int_map,
-            }),
+            None => Entry::Vacant(VacantEntry { key, int_map }),
         }
     }
 

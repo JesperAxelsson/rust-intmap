@@ -35,7 +35,7 @@ mod tests {
         println!("Starting test");
 
         for s in data.iter() {
-            assert!(map.insert(*s, *s), "intmap insert failed! ix: {:?}", s);
+            assert!(map.insert_checked(*s, *s), "intmap insert failed! ix: {:?}", s);
         }
 
         assert_eq!(map.len(), count);
@@ -77,8 +77,18 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert(i, format!("item: {:?}", i)), true);
-            assert_eq!(map.insert(i, format!("item: {:?}", i)), false);
+            assert_eq!(map.insert(i, format!("item: {:?}", i)), None);
+            assert_eq!(map.insert(i, format!("item: {:?}", i)), Some(format!("item: {:?}", i)));
+        }
+    }
+
+    #[test]
+    fn add_duplicate_replace() {
+        let mut map = IntMap::new();
+
+        for i in 0..20_000 {
+            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), true);
+            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), false);
         }
     }
 
@@ -87,7 +97,7 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert(i, i + 1), true);
+            assert_eq!(map.insert_checked(i, i + 1), true);
         }
 
         for i in 0..20_000 {
@@ -110,7 +120,7 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert(i, format!("item: {:?}", i)), true);
+            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), true);
         }
 
         for i in 20_000..40_000 {

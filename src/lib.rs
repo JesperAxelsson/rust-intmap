@@ -91,6 +91,44 @@ impl<V> IntMap<V> {
         }
     }
 
+    /// Insert key/value into the IntMap.
+    ///
+    /// This function returns the previous value if any otherwise `None`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map = IntMap::new();
+    /// assert_eq!(map.insert(21, "Eat my shorts"), None);
+    /// assert_eq!(map.insert(21, "Ay, caramba"), Some("Eat my shorts"));
+    /// assert_eq!(map.get(21), Some(&"Ay, caramba"));
+    /// ```
+    pub fn insert(&mut self, key: u64, value: V) -> Option<V> {
+        let ix = self.calc_index(key);
+
+        let vals = &mut self.cache[ix];
+        let pos = vals.iter().position(|kv| kv.0 == key);
+
+        let old = if let Some(pos) = pos {
+            Some(vals.swap_remove(pos).1)
+        } else {
+            // Only increase count if we actually add a new entry
+            self.count += 1;
+            None
+        };
+
+        
+        vals.push((key, value));
+
+        if (self.count & 4) == 4 {
+            self.ensure_load_rate();
+        }
+
+        old
+    }
+
     /// Insert key/value into the IntMap if the key is not yet inserted.
     ///
     /// This function returns true if key/value were inserted and false otherwise.
@@ -101,11 +139,11 @@ impl<V> IntMap<V> {
     /// use intmap::IntMap;
     ///
     /// let mut map = IntMap::new();
-    /// assert!(map.insert(21, "Eat my shorts"));
-    /// assert!(!map.insert(21, "Ay, caramba"));
+    /// assert!(map.insert_checked(21, "Eat my shorts"));
+    /// assert!(!map.insert_checked(21, "Ay, caramba"));
     /// assert_eq!(map.get(21), Some(&"Eat my shorts"));
     /// ```
-    pub fn insert(&mut self, key: u64, value: V) -> bool {
+    pub fn insert_checked(&mut self, key: u64, value: V) -> bool {
         let ix = self.calc_index(key);
 
         let vals = &mut self.cache[ix];

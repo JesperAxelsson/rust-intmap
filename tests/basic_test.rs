@@ -31,7 +31,7 @@ mod tests {
         let data = get_random_range(count as usize);
         let mut map: IntMap<u64> = IntMap::new();
 
-        println!("");
+        println!();
         println!("Starting test");
 
         for s in data.iter() {

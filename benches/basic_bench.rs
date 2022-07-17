@@ -118,6 +118,20 @@ mod tests {
     }
 
     #[bench]
+    fn u64_insert_intmap_checked(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+        let mut map = IntMap::with_capacity(data.len());
+
+        b.iter(|| {
+            map.clear();
+
+            for s in data.iter() {
+                test::black_box(map.insert_checked(*s, s));
+            }
+        });
+    }
+
+    #[bench]
     fn u64_insert_intmap_entry(b: &mut Bencher) {
         let data = get_random_range(VEC_COUNT);
 

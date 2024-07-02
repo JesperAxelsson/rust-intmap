@@ -7,6 +7,7 @@ extern crate test;
 extern crate indexmap;
 
 use ahash::AHashMap;
+use hashbrown::HashMap as BrownMap;
 use indexmap::IndexMap;
 use intmap::IntMap;
 use std::collections::HashMap;
@@ -17,6 +18,56 @@ mod tests {
     use test::Bencher;
 
     const VEC_COUNT: usize = 10_000;
+
+    // ********** HashBrown **********
+
+    #[bench]
+    fn u64_insert_brown(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+        let mut map = BrownMap::with_capacity(data.len());
+
+        b.iter(|| {
+            map.clear();
+
+            for s in data.iter() {
+                test::black_box(map.insert(s, s));
+            }
+        });
+    }
+
+    #[bench]
+    fn u64_insert_brown_without_capacity(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+
+        b.iter(|| {
+            let mut map = BrownMap::new();
+
+            for s in data.iter() {
+                test::black_box(map.insert(s, s));
+            }
+
+            test::black_box(&map);
+        });
+    }
+
+    #[bench]
+    fn u64_get_brown(b: &mut Bencher) {
+        let data = get_random_range(VEC_COUNT);
+        let mut map: BrownMap<&u64, &u64> = BrownMap::with_capacity(data.len());
+
+        for s in data.iter() {
+            test::black_box(map.insert(s, s));
+        }
+
+        b.iter(|| {
+            for s in data.iter() {
+                test::black_box({
+                    map.contains_key(s);
+                });
+            }
+        });
+    }
+
     // ********** Ahash **********
 
     #[bench]

@@ -23,6 +23,9 @@ pub struct IntMap<V> {
 impl<V> IntMap<V> {
     /// Creates a new IntMap.
     ///
+    /// The IntMap is initially created with a capacity of 0, so it will not allocate until it
+    /// is first inserted into.
+    ///
     /// # Examples
     ///
     /// ```
@@ -31,12 +34,20 @@ impl<V> IntMap<V> {
     /// let mut map: IntMap<u64> = IntMap::new();
     /// assert_eq!(map, IntMap::default());
     /// ```
-    pub fn new() -> Self {
-        IntMap::with_capacity(4)
+    pub const fn new() -> Self {
+        Self {
+            cache: Vec::new(),
+            size: 0,
+            count: 0,
+            mod_mask: 0,
+            load_factor: 909, // 90.9%
+        }
     }
 
-    /// Creates a new IntMap with at least the given capacity, rounded
-    /// to the next power of two.
+    /// Creates a new IntMap with at least the given capacity.
+    ///
+    /// If capacity is 0, the IntMap will not allocate. Otherwise the capacity is rounded
+    /// to the next power of two and space for elements is allocated accordingly.
     ///
     /// # Examples
     ///
@@ -46,20 +57,8 @@ impl<V> IntMap<V> {
     /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
     /// ```
     pub fn with_capacity(capacity: usize) -> Self {
-        let mut map = IntMap {
-            cache: Vec::new(),
-            size: 0,
-            count: 0,
-            mod_mask: 0,
-            load_factor: 909, // 90.9%
-        };
-
-        map.increase_cache();
-
-        while map.lim() < capacity {
-            map.increase_cache();
-        }
-
+        let mut map = Self::new();
+        map.reserve(capacity);
         map
     }
 
@@ -87,7 +86,7 @@ impl<V> IntMap<V> {
 
     /// Ensures that the IntMap has space for at least `additional` more elements
     pub fn reserve(&mut self, additional: usize) {
-        let capacity = (self.count + additional).next_power_of_two();
+        let capacity = self.count + additional;
         while self.lim() < capacity {
             self.increase_cache();
         }
@@ -108,6 +107,8 @@ impl<V> IntMap<V> {
     /// assert_eq!(map.get(21), Some(&"Ay, caramba"));
     /// ```
     pub fn insert(&mut self, key: u64, value: V) -> Option<V> {
+        self.ensure_load_rate();
+
         let ix = self.calc_index(key);
 
         let vals = &mut self.cache[ix];
@@ -122,10 +123,6 @@ impl<V> IntMap<V> {
         };
 
         vals.push((key, value));
-
-        if (self.count & 4) == 4 {
-            self.ensure_load_rate();
-        }
 
         old
     }
@@ -145,6 +142,8 @@ impl<V> IntMap<V> {
     /// assert_eq!(map.get(21), Some(&"Eat my shorts"));
     /// ```
     pub fn insert_checked(&mut self, key: u64, value: V) -> bool {
+        self.ensure_load_rate();
+
         let ix = self.calc_index(key);
 
         let vals = &mut self.cache[ix];
@@ -154,10 +153,6 @@ impl<V> IntMap<V> {
 
         self.count += 1;
         vals.push((key, value));
-
-        if (self.count & 4) == 4 {
-            self.ensure_load_rate();
-        }
 
         true
     }
@@ -177,6 +172,10 @@ impl<V> IntMap<V> {
     /// assert!(map.contains_key(21));
     /// ```
     pub fn get(&self, key: u64) -> Option<&V> {
+        if self.is_empty() {
+            return None;
+        }
+
         let ix = self.calc_index(key);
 
         let vals = &self.cache[ix];
@@ -204,6 +203,10 @@ impl<V> IntMap<V> {
     ///     assert_eq!(*map.get(21).unwrap(), 43);
     /// ```
     pub fn get_mut(&mut self, key: u64) -> Option<&mut V> {
+        if self.is_empty() {
+            return None;
+        }
+
         let ix = self.calc_index(key);
 
         let vals = &mut self.cache[ix];
@@ -228,6 +231,10 @@ impl<V> IntMap<V> {
     /// assert!(!map.contains_key(21));
     /// ```
     pub fn remove(&mut self, key: u64) -> Option<V> {
+        if self.is_empty() {
+            return None;
+        }
+
         let ix = self.calc_index(key);
 
         let vals = &mut self.cache[ix];
@@ -381,7 +388,11 @@ impl<V> IntMap<V> {
 
     #[inline(always)]
     fn lim(&self) -> usize {
-        2u64.pow(self.size) as usize
+        if self.size == 0 {
+            0
+        } else {
+            2u64.pow(self.size) as usize
+        }
     }
 
     fn increase_cache(&mut self) {
@@ -409,6 +420,11 @@ impl<V> IntMap<V> {
 
     #[inline]
     fn ensure_load_rate(&mut self) {
+        // Handle empty cache to prevent division by zero.
+        if self.cache.is_empty() {
+            self.increase_cache()
+        }
+
         // Tried using floats here but insert performance tanked.
         while ((self.count * 1000) / self.cache.len()) > self.load_factor {
             self.increase_cache();

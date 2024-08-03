@@ -19,3 +19,9 @@ indexmap = "1.8.2"
 
 [package.metadata.docs.rs]
 features = ["serde"]
+
+[workspace]
+resolver = "2"
+members = [
+    "integration_tests/serde",
+]

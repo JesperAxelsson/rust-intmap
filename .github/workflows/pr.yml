@@ -30,21 +30,19 @@ jobs:
           rustup default ${{ matrix.rust }}
           rustup component add rustfmt
 
+      - name: Check
+        # We can't use --all-targets because it includes benches which requires nightly compiler
+        run: $HOME/.cargo/bin/cargo check --workspace --lib --bins --examples --tests
+
+      - name: Clippy
+        # We can't use --all-targets because it includes benches which requires nightly compiler
+        run: $HOME/.cargo/bin/cargo clippy --workspace --lib --bins --examples --tests
+
       - name: Check Format
-        run: $HOME/.cargo/bin/cargo fmt --all -- --check
+        run: $HOME/.cargo/bin/cargo fmt --check
 
       - name: Test
-        run: $HOME/.cargo/bin/cargo test
+        run: $HOME/.cargo/bin/cargo test --workspace
         env:
           RUST_BACKTRACE: 1
-
-      - name: Integration test
-        env:
-          RUST_BACKTRACE: 1
-        run: |
-          for p in integration_tests/*; do
-              pushd $p
-              $HOME/.cargo/bin/cargo test
-              popd
-          done
 

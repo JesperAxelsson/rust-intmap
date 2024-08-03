@@ -418,7 +418,7 @@ impl<V> IntMap<V> {
     /// Number of elements in map.
     ///
     pub fn len(&self) -> usize {
-        self.count as usize
+        self.count
     }
 
     /// Force count number of slots filled.

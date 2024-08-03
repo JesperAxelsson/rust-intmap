@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn intmap_get_insert_impl() {
         let count = 20_000;
-        let data = get_random_range(count as usize);
+        let data = get_random_range(count);
         let mut map: IntMap<u64> = IntMap::new();
 
         println!();
@@ -94,8 +94,8 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), true);
-            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), false);
+            assert!(map.insert_checked(i, format!("item: {:?}", i)));
+            assert!(!map.insert_checked(i, format!("item: {:?}", i)));
         }
     }
 
@@ -104,18 +104,18 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert_checked(i, i + 1), true);
+            assert!(map.insert_checked(i, i + 1));
         }
 
         for i in 0..20_000 {
-            assert_eq!(map.contains_key(i), true);
+            assert!(map.contains_key(i));
             assert_eq!(*map.get(i).unwrap(), i + 1);
             assert_eq!(*map.get_mut(i).unwrap(), i + 1);
             assert_eq!(map.remove(i).unwrap(), i + 1);
         }
 
         for i in 0..20_000 {
-            assert_eq!(map.contains_key(i), false);
+            assert!(!map.contains_key(i));
             assert_eq!(map.remove(i), None);
         }
 
@@ -127,7 +127,7 @@ mod tests {
         let mut map = IntMap::new();
 
         for i in 0..20_000 {
-            assert_eq!(map.insert_checked(i, format!("item: {:?}", i)), true);
+            assert!(map.insert_checked(i, format!("item: {:?}", i)));
         }
 
         for i in 20_000..40_000 {
@@ -156,7 +156,7 @@ mod tests {
         map.retain(|k, _v| k > 10_000);
 
         for i in 10_001..20_000 {
-            assert_eq!(map.contains_key(i), true);
+            assert!(map.contains_key(i));
         }
     }
 
@@ -254,7 +254,7 @@ mod tests {
         let mut map: IntMap<u64> = IntMap::new();
         map.clear();
 
-        for kv in map.iter() {
+        if let Some(kv) = map.iter().next() {
             panic!("Not printing: {:?}", kv);
         }
     }
@@ -264,8 +264,8 @@ mod tests {
         let mut map: IntMap<u64> = IntMap::new();
         map.clear();
 
-        for _ in map.iter_mut() {
-            panic!();
+        if let Some(kv) = map.iter_mut().next() {
+            panic!("Not printing: {:?}", kv);
         }
     }
 
@@ -303,7 +303,7 @@ mod tests {
         let mut map: IntMap<u64> = IntMap::new();
         map.clear();
 
-        for kv in map.into_iter() {
+        if let Some(kv) = map.into_iter().next() {
             panic!("Not printing: {:?}", kv);
         }
     }
@@ -322,7 +322,7 @@ mod tests {
             map_2.insert(i, i);
         }
 
-        map_1.extend(map_2.into_iter());
+        map_1.extend(map_2);
 
         assert_eq!(map_1.len(), (count * 2) as usize);
 

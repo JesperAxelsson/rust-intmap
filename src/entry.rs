@@ -16,10 +16,10 @@ pub enum Entry<'a, V: 'a> {
 impl<'a, V> Entry<'a, V> {
     #[inline]
     pub(crate) fn new(key: u64, int_map: &'a mut IntMap<V>) -> Self {
-        let (cache_ix, val_ix) = Self::indices(key, int_map);
+        let indices = Self::indices(key, int_map);
 
-        match val_ix {
-            Some(vals_ix) => Entry::Occupied(OccupiedEntry {
+        match indices {
+            Some((cache_ix, vals_ix)) => Entry::Occupied(OccupiedEntry {
                 vals_ix,
                 vals: &mut int_map.cache[cache_ix],
                 count: &mut int_map.count,
@@ -28,15 +28,19 @@ impl<'a, V> Entry<'a, V> {
         }
     }
 
-    fn indices(key: u64, int_map: &IntMap<V>) -> (usize, Option<usize>) {
+    fn indices(key: u64, int_map: &IntMap<V>) -> Option<(usize, usize)> {
+        if int_map.is_empty() {
+            return None;
+        }
+
         let cache_ix = int_map.calc_index(key);
 
         let vals = &int_map.cache[cache_ix];
         let vals_ix = { vals.iter() }
             .enumerate()
-            .find_map(|(vals_ix, &(k, _))| (k == key).then(|| vals_ix));
+            .find_map(|(vals_ix, &(k, _))| (k == key).then(|| vals_ix))?;
 
-        (cache_ix, vals_ix)
+        Some((cache_ix, vals_ix))
     }
 }
 

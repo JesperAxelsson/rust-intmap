@@ -1,5 +1,13 @@
 #![forbid(unsafe_code)]
 
+//! Specialized hashmap for `u64` keys.
+//!
+//! For more information see the [README](https://github.com/JesperAxelsson/rust-intmap/blob/master/README.md).
+//!
+//! <div class="warning">
+//! Be aware that no effort is made against DoS attacks.
+//! </div>
+
 #[cfg(feature = "serde")]
 mod serde;
 
@@ -16,19 +24,33 @@ pub use entry::*;
 #[cfg(doctest)]
 pub struct ReadmeDoctests;
 
+/// A hashmap that maps `u64` to `V`.
 #[derive(Clone)]
 pub struct IntMap<V> {
+    // The slots for the key/value pairs.
+    //
+    // The number of slots is what we call "capacity". Two or more key/value pairs occupy the same
+    // slot if they have a hash collision.
     cache: Vec<Vec<(u64, V)>>,
+    // The size of `cache` as binary exponent. The actual size of `cache` is `2^size`.
     size: u32,
+    // A bit mask for calculating an index for `cache`. Must be recomputed if `size` changes.
     mod_mask: u64,
+    // The number of stored key/value pairs.
     count: usize,
+    // The ratio between key/value pairs and available slots that we try to ensure.
+    //
+    // Multiplied by 1000, e.g. a load factor of 90.9% will result in the value 909.
     load_factor: usize,
 }
 
 impl<V> IntMap<V> {
-    /// Creates a new IntMap.
+    /// Creates a new [`IntMap`].
     ///
-    /// The IntMap is initially created with a capacity of 0, so it will not allocate until it
+    /// The [`IntMap`] is initially created with a capacity of 0, so it will not allocate until it
+    /// is first inserted into.
+    ///
+    /// The [`IntMap`] is initially created with a capacity of 0, so it will not allocate until it
     /// is first inserted into.
     ///
     /// # Examples
@@ -49,9 +71,9 @@ impl<V> IntMap<V> {
         }
     }
 
-    /// Creates a new IntMap with at least the given capacity.
+    /// Creates a new [`IntMap`] with at least the given capacity.
     ///
-    /// If capacity is 0, the IntMap will not allocate. Otherwise the capacity is rounded
+    /// If the capacity is 0, the [`IntMap`] will not allocate. Otherwise the capacity is rounded
     /// to the next power of two and space for elements is allocated accordingly.
     ///
     /// # Examples
@@ -67,7 +89,7 @@ impl<V> IntMap<V> {
         map
     }
 
-    /// Sets the load factor of IntMap rounded to the first decimal point.
+    /// Sets the load factor of the [`IntMap`] rounded to the first decimal point.
     ///
     /// A load factor between 0.0 and 1.0 will reduce hash collisions but use more space.
     /// A load factor above 1.0 will tolerate hash collisions and use less space.
@@ -85,12 +107,12 @@ impl<V> IntMap<V> {
         self.ensure_load_rate();
     }
 
-    /// Returns the current load factor
+    /// Returns the current load factor.
     pub fn get_load_factor(&self) -> f32 {
         self.load_factor as f32 / 1000.
     }
 
-    /// Ensures that the IntMap has space for at least `additional` more elements
+    /// Ensures that the [`IntMap`] has space for at least `additional` more elements
     pub fn reserve(&mut self, additional: usize) {
         let capacity = self.count + additional;
         while self.lim() < capacity {
@@ -98,7 +120,7 @@ impl<V> IntMap<V> {
         }
     }
 
-    /// Insert key/value into the IntMap.
+    /// Inserts a key/value pair into the [`IntMap`].
     ///
     /// This function returns the previous value if any otherwise `None`.
     ///
@@ -133,7 +155,7 @@ impl<V> IntMap<V> {
         old
     }
 
-    /// Insert key/value into the IntMap if the key is not yet inserted.
+    /// Insert a key/value pair into the [`IntMap`] if the key is not yet inserted.
     ///
     /// This function returns true if key/value were inserted and false otherwise.
     ///
@@ -163,7 +185,7 @@ impl<V> IntMap<V> {
         true
     }
 
-    /// Get value from the IntMap.
+    /// Gets the value for the given key from the [`IntMap`].
     ///
     /// # Examples
     ///
@@ -189,7 +211,7 @@ impl<V> IntMap<V> {
         vals.iter().find_map(|kv| (kv.0 == key).then(|| &kv.1))
     }
 
-    /// Get mutable value from the IntMap.
+    /// Gets the mutable value for the given key from the [`IntMap`].
     ///
     /// # Examples
     ///
@@ -222,7 +244,7 @@ impl<V> IntMap<V> {
             .find_map(|kv| (kv.0 == key).then(move || &mut kv.1));
     }
 
-    /// Remove value from the IntMap.
+    /// Removes the value for given key from the [`IntMap`] and returns it.
     ///
     /// # Examples
     ///
@@ -258,7 +280,7 @@ impl<V> IntMap<V> {
         None
     }
 
-    /// Returns true if key is in map.
+    /// Returns true if the key is present in the [`IntMap`].
     ///
     /// # Examples
     ///
@@ -273,7 +295,7 @@ impl<V> IntMap<V> {
         self.get(key).is_some()
     }
 
-    /// Removes all elements from map.
+    /// Removes all elements from the [`IntMap`].
     ///
     /// # Examples
     ///
@@ -293,7 +315,7 @@ impl<V> IntMap<V> {
         self.count = 0;
     }
 
-    /// Retains only the elements specified by the predicate.
+    /// Retains only the key/value pairs specified by the predicate.
     ///
     /// In other words, remove all elements such that `f(key, &value)` returns false.
     ///
@@ -332,7 +354,7 @@ impl<V> IntMap<V> {
         self.count -= removed;
     }
 
-    /// Returns true if map is empty
+    /// Returns true if the [`IntMap`] is empty
     ///
     /// # Examples
     ///
@@ -351,28 +373,38 @@ impl<V> IntMap<V> {
 
     //**** Iterators *****
 
+    /// Returns an [`Iterator`] over all key/value pairs.
     pub fn iter(&self) -> Iter<u64, V> {
         Iter::new(&self.cache)
     }
 
+    /// Returns an [`Iterator`] over all key/value pairs with mutable value.
     pub fn iter_mut(&mut self) -> IterMut<u64, V> {
         IterMut::new(&mut self.cache)
     }
 
+    /// Returns an [`Iterator`] over all keys.
     pub fn keys(&self) -> Keys<u64, V> {
         Keys { inner: self.iter() }
     }
 
+    /// Returns an [`Iterator`] over all values.
     pub fn values(&self) -> Values<u64, V> {
         Values { inner: self.iter() }
     }
 
+    /// Returns an [`Iterator`] over all mutable values.
     pub fn values_mut(&mut self) -> ValuesMut<u64, V> {
         ValuesMut {
             inner: self.iter_mut(),
         }
     }
 
+    /// Returns an [`Iterator`] over all key/value pairs that removes the pairs from the [`IntMap`]
+    /// during iteration.
+    ///
+    /// If the [`Iterator`] is droppend then all remaining key/value pairs will be removed from
+    /// the [`IntMap`].
     pub fn drain(&mut self) -> Drain<u64, V> {
         Drain::new(&mut self.cache, &mut self.count)
     }
@@ -437,34 +469,60 @@ impl<V> IntMap<V> {
         }
     }
 
-    /// Number of elements in map.
-    ///
+    //**** More public methods *****
+
+    /// Returns the number of key/value pairs in the [`IntMap`].
     pub fn len(&self) -> usize {
         self.count
     }
 
-    /// Force count number of slots filled.
-    ///
+    /// Returns the number of filled slots.
     pub fn load(&self) -> u64 {
         self.cache.iter().filter(|vals| !vals.is_empty()).count() as u64
     }
 
+    /// Returns the ratio between key/value pairs and available slots as percentage.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use intmap::IntMap;
+    ///
+    /// let mut map: IntMap<u64> = IntMap::with_capacity(2);
+    /// map.set_load_factor(2.0);
+    /// assert_eq!(map.load_rate(), 0.0);
+    /// map.insert(1, 42);
+    /// assert_eq!(map.load_rate(), 50.0);
+    /// map.insert(2, 42);
+    /// assert_eq!(map.load_rate(), 100.0);
+    /// map.insert(3, 42);
+    /// assert_eq!(map.load_rate(), 150.0);
+    /// ```
     pub fn load_rate(&self) -> f64 {
         (self.count as f64) / (self.cache.len() as f64) * 100f64
     }
 
-    /// Total number of slots available.
-    ///
+    /// Returns the total number of available slots.
     pub fn capacity(&self) -> usize {
         self.cache.len()
     }
 
+    //**** Testing methods *****
+
+    /// Checks whether the actual count of key/value pairs matches [`IntMap::count`].
+    ///
+    /// Only for testing.
+    #[doc(hidden)]
     pub fn assert_count(&self) -> bool {
         let count = self.cache.iter().flatten().count();
 
         self.count == count
     }
 
+    /// Returns a new [`IntMap`] that contains only the collisions of the current [`IntMap`].
+    ///
+    /// Only for testing.
+    #[doc(hidden)]
     pub fn collisions(&self) -> IntMap<u64> {
         let mut map = IntMap::new();
 
@@ -480,10 +538,10 @@ impl<V> IntMap<V> {
             }
         }
 
-        // map.sort();
-
         map
     }
+
+    //**** Entry API *****
 
     /// Gets the [`Entry`] that corresponds to the given key.
     ///

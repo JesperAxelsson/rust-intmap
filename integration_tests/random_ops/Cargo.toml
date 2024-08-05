@@ -1,0 +1,10 @@
+[package]
+name = "intmap-integration-test-random-ops"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dependencies]
+intmap = { path = "../.." }
+proptest = "1.0.0"

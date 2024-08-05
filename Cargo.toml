@@ -23,5 +23,6 @@ features = ["serde"]
 [workspace]
 resolver = "2"
 members = [
+    "integration_tests/random_ops",
     "integration_tests/serde",
 ]

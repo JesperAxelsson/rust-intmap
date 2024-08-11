@@ -63,9 +63,10 @@ impl<V> IntMap<V> {
         map
     }
 
-    /// Sets load rate of IntMap rounded to the first decimal point.
+    /// Sets the load factor of IntMap rounded to the first decimal point.
     ///
-    /// Values above 1.0 is allowed.
+    /// A load factor between 0.0 and 1.0 will reduce hash collisions but use more space.
+    /// A load factor above 1.0 will tolerate hash collisions and use less space.
     ///
     /// # Examples
     ///
@@ -80,7 +81,7 @@ impl<V> IntMap<V> {
         self.ensure_load_rate();
     }
 
-    /// Returns current load_factor
+    /// Returns the current load factor
     pub fn get_load_factor(&self) -> f32 {
         self.load_factor as f32 / 1000.
     }

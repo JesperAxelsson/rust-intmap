@@ -20,7 +20,7 @@ pub struct LoadFactor(f32);
 
 impl LoadFactor {
     fn arb() -> impl Strategy<Value = Self> {
-        (1.0f32..=10.0f32).prop_map(Self)
+        (0.1f32..=10.0f32).prop_map(Self)
     }
 }
 

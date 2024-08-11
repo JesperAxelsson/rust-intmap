@@ -11,6 +11,11 @@ use iter::*;
 
 pub use entry::*;
 
+// Test examples from the README.
+#[doc = include_str!("../README.md")]
+#[cfg(doctest)]
+pub struct ReadmeDoctests;
+
 #[derive(Clone)]
 pub struct IntMap<V> {
     cache: Vec<Vec<(u64, V)>>,

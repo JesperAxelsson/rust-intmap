@@ -12,7 +12,7 @@ Benchmarks were performed on an AMD Ryzen 9 3900X running Manjaro with kernel ve
 Performace compared to the standard hashmap and hashbrown:
 
 
-````
+```txt
 test tests::u64_get_ahash                        ... bench:      33,612.79 ns/iter (+/- 1,338.91)
 test tests::u64_get_brown                        ... bench:      34,459.40 ns/iter (+/- 563.82)
 test tests::u64_get_built_in                     ... bench:     136,051.06 ns/iter (+/- 4,299.34)
@@ -33,14 +33,14 @@ test tests::u64_insert_intmap_without_capacity   ... bench:     766,954.68 ns/it
 test tests::u64_insert_no_op                     ... bench:      90,375.35 ns/iter (+/- 1,144.02)
 test tests::u64_insert_no_op_without_capacity    ... bench:     190,528.64 ns/iter (+/- 5,733.59)
 test tests::u64_resize_intmap                    ... bench:      55,155.88 ns/iter (+/- 648.32)
-````
+```
 # Breaking Changes
 2.0.0 - Changed behavior of `insert` to match std::HashMap. The old behavior is renamed to `insert_checked`. 
 
 # How to use
 Simple example.
 
-````rust
+```rust
 extern crate intmap;
 
 use intmap::IntMap;
@@ -50,15 +50,15 @@ let mut map = IntMap::new();
 for i in 0..20_000 {
     map.insert(i, format!("item: {:?}", i));
 }
-````
+```
 
 # How can it be so much faster?
 I use a specialized hash function for u64 it multiplies the key with the largest prime for u64. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as per http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators.
-````
+```rust
 #[inline]
 fn hash_u64(seed: u64) -> u64 {
     let a = 11400714819323198549u64;
     let val = a.wrapping_mul(seed);
     val
 }
-````
+```

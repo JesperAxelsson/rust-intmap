@@ -444,6 +444,19 @@ mod tests {
     fn load_factor() {
         let mut map: IntMap<u64> = IntMap::new();
 
+        map.set_load_factor(0.0);
+        assert_eq!(map.get_load_factor(), 0.0);
+
+        for i in 0..12 {
+            map.insert(i, i);
+        }
+
+        assert_eq!(map.capacity(), 16384);
+        assert!(map.load_rate() <= 1.);
+        assert!(map.collisions().is_empty());
+
+        let mut map: IntMap<u64> = IntMap::new();
+
         map.set_load_factor(0.1);
         assert_eq!(map.get_load_factor(), 0.1);
 

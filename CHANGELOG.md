@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- `IntMap::new` is now const and creates an instance with zero capacity, thus will not allocate. The latter is also true for `IntMap::default`. Previously the initial capacity was 4. If you want to restore the old behavior, you can use `IntMap::with_capacity(4)`.
+
 ## [2.0.0] 2022-07-17
 
 ### Added Breaking!

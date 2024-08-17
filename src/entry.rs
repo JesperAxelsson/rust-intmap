@@ -1,21 +1,21 @@
 // ***************** Entry *********************
 
-use crate::IntMap;
+use crate::{Int, IntMap};
 
 /// A view into a single entry in a [`IntMap`], which may either be vacant or occupied.
 ///
 /// The entry can be constructed by calling [`IntMap::entry`] with a key. It allows inspection
 /// and in-place manipulation of its value without repeated lookups.
-pub enum Entry<'a, V: 'a> {
+pub enum Entry<'a, V: 'a, I = u64> {
     /// The entry is occupied.
-    Occupied(OccupiedEntry<'a, V>),
+    Occupied(OccupiedEntry<'a, V, I>),
     /// The entry is vacant.
-    Vacant(VacantEntry<'a, V>),
+    Vacant(VacantEntry<'a, V, I>),
 }
 
-impl<'a, V> Entry<'a, V> {
+impl<'a, V, I: Int> Entry<'a, V, I> {
     #[inline]
-    pub(crate) fn new(key: u64, int_map: &'a mut IntMap<V>) -> Self {
+    pub(crate) fn new(key: I, int_map: &'a mut IntMap<V, I>) -> Self {
         let indices = Self::indices(key, int_map);
 
         match indices {
@@ -28,12 +28,12 @@ impl<'a, V> Entry<'a, V> {
         }
     }
 
-    fn indices(key: u64, int_map: &IntMap<V>) -> Option<(usize, usize)> {
+    fn indices(key: I, int_map: &IntMap<V, I>) -> Option<(usize, usize)> {
         if int_map.is_empty() {
             return None;
         }
 
-        let cache_ix = int_map.calc_index(key);
+        let cache_ix = I::calc_index(key, int_map.mod_mask);
 
         let vals = &int_map.cache[cache_ix];
         let vals_ix = { vals.iter() }
@@ -45,16 +45,16 @@ impl<'a, V> Entry<'a, V> {
 }
 
 /// A view into an occupied entry in a [`IntMap`]. It is part of the [`Entry`] enum.
-pub struct OccupiedEntry<'a, V: 'a> {
+pub struct OccupiedEntry<'a, V: 'a, I = u64> {
     // Index to vals, guaranteed to be valid
     vals_ix: usize,
     // Element of IntMap::cache, guaranteed to be non-empty
-    vals: &'a mut Vec<(u64, V)>,
+    vals: &'a mut Vec<(I, V)>,
     // IntMap::count, guaranteed to be non-zero
     count: &'a mut usize,
 }
 
-impl<'a, V> OccupiedEntry<'a, V> {
+impl<'a, V, I: Int> OccupiedEntry<'a, V, I> {
     /// Gets a reference to the value in the entry.
     pub fn get(&self) -> &V {
         // Safety: We didn't modify the cache since we calculated the index
@@ -90,9 +90,9 @@ impl<'a, V> OccupiedEntry<'a, V> {
 }
 
 /// A view into a vacant entry in a [`IntMap`]. It is part of the [`Entry`] enum.
-pub struct VacantEntry<'a, V: 'a> {
-    key: u64,
-    int_map: &'a mut IntMap<V>,
+pub struct VacantEntry<'a, V: 'a, I = u64> {
+    key: I,
+    int_map: &'a mut IntMap<V, I>,
 }
 
 impl<'a, V: 'a> VacantEntry<'a, V> {

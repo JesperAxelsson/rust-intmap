@@ -5,6 +5,7 @@ use std::slice::IterMut as SliceIterMut;
 use std::vec::Drain as VecDrain;
 use std::vec::IntoIter as VecIntoIter;
 
+use crate::Int;
 use crate::IntMap;
 
 // ***************** Iter *********************
@@ -113,9 +114,9 @@ impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
 
 // ***************** Into Iter *********************
 
-impl<V> IntoIterator for IntMap<V> {
-    type Item = (u64, V);
-    type IntoIter = IntoIter<u64, V>;
+impl<V, I: Int> IntoIterator for IntMap<V, I> {
+    type Item = (I, V);
+    type IntoIter = IntoIter<I, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter::new(self.cache)
@@ -179,9 +180,9 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
 
 // ***************** Extend *********************
 
-impl<V> Extend<(u64, V)> for IntMap<V> {
+impl<V, I: Int> Extend<(I, V)> for IntMap<V, I> {
     #[inline]
-    fn extend<T: IntoIterator<Item = (u64, V)>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = (I, V)>>(&mut self, iter: T) {
         for elem in iter {
             self.insert(elem.0, elem.1);
         }
@@ -190,13 +191,13 @@ impl<V> Extend<(u64, V)> for IntMap<V> {
 
 // ***************** FromIterator *********************
 
-impl<V> std::iter::FromIterator<(u64, V)> for IntMap<V> {
+impl<V, I: Int> std::iter::FromIterator<(I, V)> for IntMap<V, I> {
     #[inline]
-    fn from_iter<T: IntoIterator<Item = (u64, V)>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = (I, V)>>(iter: T) -> Self {
         let iterator = iter.into_iter();
         let (lower_bound, _) = iterator.size_hint();
 
-        let mut map = IntMap::with_capacity(lower_bound);
+        let mut map = IntMap::with_capacity_with(lower_bound);
         for elem in iterator {
             map.insert(elem.0, elem.1);
         }

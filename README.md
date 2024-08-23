@@ -1,16 +1,16 @@
 [![crates.io](https://img.shields.io/crates/v/intmap.svg)](https://crates.io/crates/intmap)
 
 # rust-intmap
-Specialized hashmap for u64 keys
+Specialized hashmap for `u64` keys
 
 Might be missing some functionality but you can remove, add, get and clear for now.
 
-Be aware that no effort is made against DoS attacks.
+> [!WARNING]  
+> Be aware that no effort is made against DoS attacks.
 
 Benchmarks were performed on an AMD Ryzen 9 3900X running Manjaro with kernel version 6.6.40. Please remember to perform your own benchmarks if performance is important for your application.
 
-Performace compared to the standard hashmap and hashbrown:
-
+Performance compared to the standard hashmap and hashbrown:
 
 ```txt
 test tests::u64_get_ahash                        ... bench:      33,612.79 ns/iter (+/- 1,338.91)
@@ -38,7 +38,7 @@ test tests::u64_resize_intmap                    ... bench:      55,155.88 ns/it
 2.0.0 - Changed behavior of `insert` to match std::HashMap. The old behavior is renamed to `insert_checked`. 
 
 # How to use
-Simple example.
+Simple example:
 
 ```rust
 extern crate intmap;
@@ -53,7 +53,8 @@ for i in 0..20_000 {
 ```
 
 # How can it be so much faster?
-I use a specialized hash function for u64 it multiplies the key with the largest prime for u64. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as per http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators.
+I use a specialized hash function for `u64` which multiplies the key with the largest prime for `u64`. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as mentioned in [this Stack Overflow post](http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators). The hash function looks like this:
+
 ```rust
 #[inline]
 fn hash_u64(seed: u64) -> u64 {

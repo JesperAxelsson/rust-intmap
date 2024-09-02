@@ -6,7 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        rust: [ 1.58.1, 1.61.0 ]
+        rust:
+          - version: 1.58.1
+            run-all: false
+          - version: 1.80.1
+            run-all: true
 
     steps:
       - uses: actions/checkout@v2
@@ -18,31 +22,37 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ matrix.build }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ matrix.rust.version }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ matrix.build }}-cargo-
+            ${{ matrix.rust.version }}-cargo-
 
       - name: Install Rust
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain stable -y
           source $HOME/.cargo/env
-          rustup update ${{ matrix.rust }} --no-self-update
-          rustup default ${{ matrix.rust }}
-          rustup component add rustfmt
+          rustup update ${{ matrix.rust.version }} --no-self-update
+          rustup default ${{ matrix.rust.version }}
 
-      - name: Check
+      - name: Check lib
+        run: $HOME/.cargo/bin/cargo check --lib
+
+      - name: Check all
         # We can't use --all-targets because it includes benches which requires nightly compiler
         run: $HOME/.cargo/bin/cargo check --workspace --lib --bins --examples --tests
+        if: ${{ matrix.rust.run-all }}
 
       - name: Clippy
         # We can't use --all-targets because it includes benches which requires nightly compiler
         run: $HOME/.cargo/bin/cargo clippy --workspace --lib --bins --examples --tests
+        if: ${{ matrix.rust.run-all }}
 
       - name: Check Format
         run: $HOME/.cargo/bin/cargo fmt --check
+        if: ${{ matrix.rust.run-all }}
 
       - name: Test
         run: $HOME/.cargo/bin/cargo test --workspace
+        if: ${{ matrix.rust.run-all }}
         env:
           RUST_BACKTRACE: 1
 

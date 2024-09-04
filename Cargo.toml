@@ -14,20 +14,7 @@ keywords = ["hashmap", "u64", "intmap"]
 serde = { version = "1.0", optional = true, default-features = false }
 
 [dev-dependencies]
-divan = "0.1.14"
-indexmap = "1.8.2"
 rand = "0.8.5"
 
 [package.metadata.docs.rs]
 features = ["serde"]
-
-[[bench]]
-name = "basic_bench"
-harness = false
-
-[workspace]
-resolver = "2"
-members = [
-    "integration_tests/random_ops",
-    "integration_tests/serde",
-]

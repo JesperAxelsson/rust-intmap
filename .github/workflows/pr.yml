@@ -8,9 +8,9 @@ jobs:
       matrix:
         rust:
           - version: 1.58.1
-            run-all: false
+            integration-tests: false
           - version: 1.80.1
-            run-all: true
+            integration-tests: true
 
     steps:
       - uses: actions/checkout@v2
@@ -34,25 +34,24 @@ jobs:
           rustup default ${{ matrix.rust.version }}
 
       - name: Check lib
-        run: $HOME/.cargo/bin/cargo check --lib
+        run: |
+          $HOME/.cargo/bin/cargo check --all-targets --no-default-features
+          $HOME/.cargo/bin/cargo check --all-targets
+          $HOME/.cargo/bin/cargo clippy --all-targets
+          $HOME/.cargo/bin/cargo fmt --check
+          $HOME/.cargo/bin/cargo test
+        env:
+          RUST_BACKTRACE: 1
 
-      - name: Check all
-        # We can't use --all-targets because it includes benches which requires nightly compiler
-        run: $HOME/.cargo/bin/cargo check --workspace --lib --bins --examples --tests
-        if: ${{ matrix.rust.run-all }}
-
-      - name: Clippy
-        # We can't use --all-targets because it includes benches which requires nightly compiler
-        run: $HOME/.cargo/bin/cargo clippy --workspace --lib --bins --examples --tests
-        if: ${{ matrix.rust.run-all }}
-
-      - name: Check Format
-        run: $HOME/.cargo/bin/cargo fmt --check
-        if: ${{ matrix.rust.run-all }}
-
-      - name: Test
-        run: $HOME/.cargo/bin/cargo test --workspace
-        if: ${{ matrix.rust.run-all }}
+      - name: Check integration tests
+        run: |
+          pushd integration_tests
+          $HOME/.cargo/bin/cargo check --all-targets
+          $HOME/.cargo/bin/cargo clippy --all-targets
+          $HOME/.cargo/bin/cargo fmt --check
+          $HOME/.cargo/bin/cargo test
+          popd
+        if: ${{ matrix.rust.integration-tests }}
         env:
           RUST_BACKTRACE: 1
 

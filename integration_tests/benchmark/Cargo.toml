@@ -1,0 +1,16 @@
+[package]
+name = "intmap-integration-test-benchmark"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[dev-dependencies]
+divan = "0.1.14"
+indexmap = "1.8.2"
+intmap = { path = "../.." }
+rand = "0.8.5"
+
+[[bench]]
+name = "basic_bench"
+harness = false

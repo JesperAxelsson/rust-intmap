@@ -6,7 +6,9 @@ license = "MIT"
 publish = false
 
 [dev-dependencies]
+ahash = "0.8.11"
 divan = "0.1.14"
+hashbrown = "0.14.5"
 indexmap = "1.8.2"
 intmap = { path = "../.." }
 rand = "0.8.5"

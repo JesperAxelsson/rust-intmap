@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
+use ahash::AHashMap;
 use divan::{bench, black_box, Bencher};
+use hashbrown::HashMap as BrownMap;
 use indexmap::IndexMap;
 use intmap::{Entry, IntMap};
-use std::collections::HashMap;
 
 const VEC_COUNT: usize = 10_000;
 
@@ -26,7 +29,7 @@ fn u64_insert_built_in(bencher: Bencher) {
 }
 
 #[bench]
-fn u64_insert_built_in_without_capacity(bencher: Bencher) {
+fn u64_insert_without_capacity_built_in(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
@@ -51,9 +54,172 @@ fn u64_get_built_in(bencher: Bencher) {
 
     bencher.bench_local(|| {
         for s in data.iter() {
-            black_box({
-                map.contains_key(s);
-            });
+            black_box(map.contains_key(s));
+        }
+    });
+}
+
+// ********** No Op **********
+struct NoOpHasher(u64);
+
+impl std::hash::Hasher for NoOpHasher {
+    fn finish(&self) -> u64 {
+        self.0
+    }
+
+    fn write(&mut self, _: &[u8]) {
+        unimplemented!()
+    }
+
+    fn write_u64(&mut self, i: u64) {
+        self.0 = i;
+    }
+}
+
+impl std::hash::BuildHasher for NoOpHasher {
+    type Hasher = NoOpHasher;
+
+    fn build_hasher(&self) -> Self::Hasher {
+        NoOpHasher(0)
+    }
+}
+
+#[bench]
+fn u64_insert_no_op(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map = HashMap::with_capacity_and_hasher(data.len(), NoOpHasher(0));
+
+    bencher.bench_local(|| {
+        map.clear();
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+    });
+}
+
+#[bench]
+fn u64_insert_without_capacity_no_op(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+
+    bencher.bench_local(|| {
+        let mut map = HashMap::with_hasher(NoOpHasher(0));
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+
+        black_box(&map);
+    });
+}
+
+#[bench]
+fn u64_get_no_op(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map: HashMap<&u64, &u64, NoOpHasher> =
+        HashMap::with_capacity_and_hasher(data.len(), NoOpHasher(0));
+
+    for s in data.iter() {
+        black_box(map.insert(s, s));
+    }
+
+    bencher.bench_local(|| {
+        for s in data.iter() {
+            black_box(map.contains_key(s));
+        }
+    });
+}
+
+// ********** HashBrown **********
+
+#[bench]
+fn u64_insert_brown(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map = BrownMap::with_capacity(data.len());
+
+    bencher.bench_local(|| {
+        map.clear();
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+    });
+}
+
+#[bench]
+fn u64_insert_without_capacity_brown(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+
+    bencher.bench_local(|| {
+        let mut map = BrownMap::new();
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+
+        black_box(&map);
+    });
+}
+
+#[bench]
+fn u64_get_brown(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map: BrownMap<&u64, &u64> = BrownMap::with_capacity(data.len());
+
+    for s in data.iter() {
+        black_box(map.insert(s, s));
+    }
+
+    bencher.bench_local(|| {
+        for s in data.iter() {
+            black_box(map.contains_key(s));
+        }
+    });
+}
+
+// ********** Ahash **********
+
+#[bench]
+fn u64_insert_ahash(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map = AHashMap::with_capacity(data.len());
+
+    bencher.bench_local(|| {
+        map.clear();
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+    });
+}
+
+#[bench]
+fn u64_insert_without_capacity_ahash(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+
+    bencher.bench_local(|| {
+        let mut map = AHashMap::new();
+
+        for s in data.iter() {
+            black_box(map.insert(s, s));
+        }
+
+        black_box(&map);
+    });
+}
+
+#[bench]
+fn u64_get_ahash(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map: AHashMap<&u64, &u64> = AHashMap::with_capacity(data.len());
+
+    for s in data.iter() {
+        black_box(map.insert(s, s));
+    }
+
+    bencher.bench_local(|| {
+        for s in data.iter() {
+            black_box(map.contains_key(s));
         }
     });
 }
@@ -85,9 +251,7 @@ fn u64_get_indexmap(bencher: Bencher) {
 
     bencher.bench_local(|| {
         for s in data.iter() {
-            black_box({
-                map.contains_key(s);
-            });
+            black_box(map.contains_key(s));
         }
     });
 }
@@ -141,7 +305,7 @@ fn u64_insert_intmap_entry(bencher: Bencher) {
 }
 
 #[bench]
-fn u64_insert_intmap_without_capacity(bencher: Bencher) {
+fn u64_insert_without_capacity_intmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {

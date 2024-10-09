@@ -12,12 +12,17 @@
 mod serde;
 
 mod entry;
+mod highest_prime;
 mod iter;
 
 use core::iter::{IntoIterator, Iterator};
+use highest_prime::HighestPrime;
 use iter::*;
+use std::ops::{BitAnd, Sub};
 
 pub use entry::*;
+use num_traits::ops::wrapping::WrappingMul;
+use num_traits::AsPrimitive;
 
 // Test examples from the README.
 #[doc = include_str!("../README.md")]
@@ -26,16 +31,16 @@ pub struct ReadmeDoctests;
 
 /// A hashmap that maps `u64` to `V`.
 #[derive(Clone)]
-pub struct IntMap<V> {
+pub struct IntMap<K, V> {
     // The slots for the key/value pairs.
     //
     // The number of slots is what we call "capacity". Two or more key/value pairs occupy the same
     // slot if they have a hash collision.
-    cache: Vec<Vec<(u64, V)>>,
+    cache: Vec<Vec<(K, V)>>,
     // The size of `cache` as binary exponent. The actual size of `cache` is `2^size`.
     size: u32,
     // A bit mask for calculating an index for `cache`. Must be recomputed if `size` changes.
-    mod_mask: u64,
+    mod_mask: K,
     // The number of stored key/value pairs.
     count: usize,
     // The ratio between key/value pairs and available slots that we try to ensure.
@@ -44,7 +49,7 @@ pub struct IntMap<V> {
     load_factor: usize,
 }
 
-impl<V> IntMap<V> {
+impl<K, V> IntMap<K, V> {
     /// Creates a new [`IntMap`].
     ///
     /// The [`IntMap`] is initially created with a capacity of 0, so it will not allocate until it
@@ -58,15 +63,20 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// assert_eq!(map, IntMap::default());
     /// ```
-    pub const fn new() -> Self {
+    pub fn new() -> Self
+    where
+        K: 'static + Copy,
+        usize: AsPrimitive<K>,
+    {
+        let mod_mask = 0.as_().clone();
         Self {
             cache: Vec::new(),
             size: 0,
             count: 0,
-            mod_mask: 0,
+            mod_mask: mod_mask.clone(),
             load_factor: 909, // 90.9%
         }
     }
@@ -81,9 +91,14 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
+    /// let mut map: IntMap<u64, u64> = IntMap::with_capacity(20);
     /// ```
-    pub fn with_capacity(capacity: usize) -> Self {
+    pub fn with_capacity(capacity: usize) -> Self
+    where
+        K: 'static + BitAnd + Copy + HighestPrime + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         let mut map = Self::new();
         map.reserve(capacity);
         map
@@ -99,10 +114,15 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::with_capacity(20);
+    /// let mut map: IntMap<u64, u64> = IntMap::with_capacity(20);
     /// map.set_load_factor(0.909); // Sets load factor to 90.9%
     /// ```
-    pub fn set_load_factor(&mut self, load_factor: f32) {
+    pub fn set_load_factor(&mut self, load_factor: f32)
+    where
+        K: 'static + BitAnd + Copy + HighestPrime + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         self.load_factor = (load_factor * 1000.) as usize;
         self.ensure_load_rate();
     }
@@ -113,7 +133,12 @@ impl<V> IntMap<V> {
     }
 
     /// Ensures that the [`IntMap`] has space for at least `additional` more elements
-    pub fn reserve(&mut self, additional: usize) {
+    pub fn reserve(&mut self, additional: usize)
+    where
+        K: 'static + BitAnd + Copy + HighestPrime + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         let capacity = self.count + additional;
         while self.lim() < capacity {
             self.increase_cache();
@@ -130,11 +155,16 @@ impl<V> IntMap<V> {
     /// use intmap::IntMap;
     ///
     /// let mut map = IntMap::new();
-    /// assert_eq!(map.insert(21, "Eat my shorts"), None);
+    /// assert_eq!(map.insert(21u32, "Eat my shorts"), None);
     /// assert_eq!(map.insert(21, "Ay, caramba"), Some("Eat my shorts"));
     /// assert_eq!(map.get(21), Some(&"Ay, caramba"));
     /// ```
-    pub fn insert(&mut self, key: u64, value: V) -> Option<V> {
+    pub fn insert(&mut self, key: K, value: V) -> Option<V>
+    where
+        K: AsPrimitive<usize> + BitAnd + Copy + HighestPrime + PartialEq + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         self.ensure_load_rate();
 
         let ix = self.calc_index(key);
@@ -165,11 +195,16 @@ impl<V> IntMap<V> {
     /// use intmap::IntMap;
     ///
     /// let mut map = IntMap::new();
-    /// assert!(map.insert_checked(21, "Eat my shorts"));
+    /// assert!(map.insert_checked(21u32, "Eat my shorts"));
     /// assert!(!map.insert_checked(21, "Ay, caramba"));
     /// assert_eq!(map.get(21), Some(&"Eat my shorts"));
     /// ```
-    pub fn insert_checked(&mut self, key: u64, value: V) -> bool {
+    pub fn insert_checked(&mut self, key: K, value: V) -> bool
+    where
+        K: 'static + BitAnd + Copy + PartialEq + HighestPrime + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         self.ensure_load_rate();
 
         let ix = self.calc_index(key);
@@ -192,14 +227,18 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     /// let val = map.get(21);
     /// assert!(val.is_some());
     /// assert_eq!(*val.unwrap(), 42);
     /// assert!(map.contains_key(21));
     /// ```
-    pub fn get(&self, key: u64) -> Option<&V> {
+    pub fn get(&self, key: K) -> Option<&V>
+    where
+        K: BitAnd + Copy + PartialEq + HighestPrime + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         if self.is_empty() {
             return None;
         }
@@ -218,7 +257,7 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     ///
     /// assert_eq!(*map.get(21).unwrap(), 42);
@@ -230,7 +269,11 @@ impl<V> IntMap<V> {
     /// }
     ///     assert_eq!(*map.get(21).unwrap(), 43);
     /// ```
-    pub fn get_mut(&mut self, key: u64) -> Option<&mut V> {
+    pub fn get_mut(&mut self, key: K) -> Option<&mut V>
+    where
+        K: BitAnd + Copy + HighestPrime + PartialEq + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         if self.is_empty() {
             return None;
         }
@@ -251,14 +294,18 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     /// let val = map.remove(21);
     /// assert!(val.is_some());
     /// assert_eq!(val.unwrap(), 42);
     /// assert!(!map.contains_key(21));
     /// ```
-    pub fn remove(&mut self, key: u64) -> Option<V> {
+    pub fn remove(&mut self, key: K) -> Option<V>
+    where
+        K: BitAnd + Copy + HighestPrime + PartialEq + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         if self.is_empty() {
             return None;
         }
@@ -287,11 +334,15 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     /// assert!(map.contains_key(21));
     /// ```
-    pub fn contains_key(&self, key: u64) -> bool {
+    pub fn contains_key(&self, key: K) -> bool
+    where
+        K: BitAnd + Copy + PartialEq + HighestPrime + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         self.get(key).is_some()
     }
 
@@ -302,7 +353,7 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     /// map.clear();
     /// assert_eq!(map.len(), 0);
@@ -324,7 +375,7 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(1, 11);
     /// map.insert(2, 12);
     /// map.insert(4, 13);
@@ -338,7 +389,8 @@ impl<V> IntMap<V> {
     /// ```
     pub fn retain<F>(&mut self, mut f: F)
     where
-        F: FnMut(u64, &V) -> bool,
+        F: FnMut(K, &V) -> bool,
+        K: Copy,
     {
         let mut removed = 0;
         for vals in &mut self.cache {
@@ -361,7 +413,7 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::new();
+    /// let mut map: IntMap<u64, u64> = IntMap::new();
     /// map.insert(21, 42);
     /// assert!(!map.is_empty());
     /// map.remove(21);
@@ -374,27 +426,27 @@ impl<V> IntMap<V> {
     //**** Iterators *****
 
     /// Returns an [`Iterator`] over all key/value pairs.
-    pub fn iter(&self) -> Iter<u64, V> {
+    pub fn iter(&self) -> Iter<K, V> {
         Iter::new(&self.cache)
     }
 
     /// Returns an [`Iterator`] over all key/value pairs with mutable value.
-    pub fn iter_mut(&mut self) -> IterMut<u64, V> {
+    pub fn iter_mut(&mut self) -> IterMut<K, V> {
         IterMut::new(&mut self.cache)
     }
 
     /// Returns an [`Iterator`] over all keys.
-    pub fn keys(&self) -> Keys<u64, V> {
+    pub fn keys(&self) -> Keys<K, V> {
         Keys { inner: self.iter() }
     }
 
     /// Returns an [`Iterator`] over all values.
-    pub fn values(&self) -> Values<u64, V> {
+    pub fn values(&self) -> Values<K, V> {
         Values { inner: self.iter() }
     }
 
     /// Returns an [`Iterator`] over all mutable values.
-    pub fn values_mut(&mut self) -> ValuesMut<u64, V> {
+    pub fn values_mut(&mut self) -> ValuesMut<K, V> {
         ValuesMut {
             inner: self.iter_mut(),
         }
@@ -405,23 +457,20 @@ impl<V> IntMap<V> {
     ///
     /// If the [`Iterator`] is droppend then all remaining key/value pairs will be removed from
     /// the [`IntMap`].
-    pub fn drain(&mut self) -> Drain<u64, V> {
+    pub fn drain(&mut self) -> Drain<K, V> {
         Drain::new(&mut self.cache, &mut self.count)
     }
 
     //**** Internal hash stuff *****
-
     #[inline(always)]
-    fn hash_u64(seed: u64) -> u64 {
-        let a = 11400714819323198549u64;
-        a.wrapping_mul(seed)
-    }
-
-    #[inline(always)]
-    pub(crate) fn calc_index(&self, key: u64) -> usize {
-        let hash = Self::hash_u64(key);
+    pub(crate) fn calc_index(&self, key: K) -> usize
+    where
+        K: BitAnd + Copy + HighestPrime + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
+        let hash = K::highest_prime().wrapping_mul(&key);
         // Faster modulus
-        (hash & self.mod_mask) as usize
+        (hash & self.mod_mask).as_()
     }
 
     #[inline(always)]
@@ -433,12 +482,17 @@ impl<V> IntMap<V> {
         }
     }
 
-    fn increase_cache(&mut self) {
+    fn increase_cache(&mut self)
+    where
+        K: 'static + BitAnd + Copy + Sub + HighestPrime + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         self.size += 1;
         let new_lim = self.lim();
-        self.mod_mask = (new_lim as u64) - 1;
+        self.mod_mask = (new_lim - 1).as_();
 
-        let mut vec: Vec<Vec<(u64, V)>> = (0..new_lim).map(|_| Vec::new()).collect();
+        let mut vec: Vec<Vec<(K, V)>> = (0..new_lim).map(|_| Vec::new()).collect();
         std::mem::swap(&mut self.cache, &mut vec);
 
         for k in vec.into_iter().flatten() {
@@ -457,7 +511,12 @@ impl<V> IntMap<V> {
     }
 
     #[inline]
-    fn ensure_load_rate(&mut self) {
+    fn ensure_load_rate(&mut self)
+    where
+        K: 'static + BitAnd + Copy + HighestPrime + Sub + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+        usize: AsPrimitive<K>,
+    {
         // Handle empty cache to prevent division by zero.
         if self.cache.is_empty() {
             self.increase_cache()
@@ -488,7 +547,7 @@ impl<V> IntMap<V> {
     /// ```
     /// use intmap::IntMap;
     ///
-    /// let mut map: IntMap<u64> = IntMap::with_capacity(2);
+    /// let mut map: IntMap<u64, u64> = IntMap::with_capacity(2);
     /// map.set_load_factor(2.0);
     /// assert_eq!(map.load_rate(), 0.0);
     /// map.insert(1, 42);
@@ -523,12 +582,25 @@ impl<V> IntMap<V> {
     ///
     /// Only for testing.
     #[doc(hidden)]
-    pub fn collisions(&self) -> IntMap<u64> {
+    pub fn collisions(&self) -> IntMap<K, u64>
+    where
+        K: 'static
+            + AsPrimitive<usize>
+            + BitAnd
+            + Copy
+            + HighestPrime
+            + PartialEq
+            + PartialOrd
+            + Sub
+            + WrappingMul,
+        usize: AsPrimitive<K>,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         let mut map = IntMap::new();
 
         for s in self.cache.iter() {
-            let key = s.len() as u64;
-            if key > 1 {
+            let key = s.len().as_();
+            if key > 1.as_() {
                 if !map.contains_key(key) {
                     map.insert(key, 1);
                 } else {
@@ -552,7 +624,7 @@ impl<V> IntMap<V> {
     ///
     /// let mut counters = IntMap::new();
     ///
-    /// for number in [10, 30, 10, 40, 50, 50, 60, 50] {
+    /// for number in [10u32, 30, 10, 40, 50, 50, 60, 50] {
     ///     let counter = match counters.entry(number) {
     ///         Entry::Occupied(entry) => entry.into_mut(),
     ///         Entry::Vacant(entry) => entry.insert(0),
@@ -567,12 +639,20 @@ impl<V> IntMap<V> {
     /// assert_eq!(counters.get(50), Some(&3));
     /// assert_eq!(counters.get(60), Some(&1));
     /// ```
-    pub fn entry(&mut self, key: u64) -> Entry<V> {
+    pub fn entry(&mut self, key: K) -> Entry<K, V>
+    where
+        K: BitAnd + Copy + HighestPrime + PartialEq + WrappingMul,
+        <K as BitAnd>::Output: AsPrimitive<usize>,
+    {
         Entry::new(key, self)
     }
 }
 
-impl<V> Default for IntMap<V> {
+impl<K, V> Default for IntMap<K, V>
+where
+    usize: AsPrimitive<K>,
+    K: 'static + Copy,
+{
     fn default() -> Self {
         Self::new()
     }
@@ -580,21 +660,30 @@ impl<V> Default for IntMap<V> {
 
 // ***************** Equality *********************
 
-impl<V> PartialEq for IntMap<V>
+impl<K, V> PartialEq for IntMap<K, V>
 where
+    K: BitAnd + Copy + PartialEq + HighestPrime + PartialEq + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
     V: PartialEq,
 {
-    fn eq(&self, other: &IntMap<V>) -> bool {
+    fn eq(&self, other: &IntMap<K, V>) -> bool {
         self.iter().all(|(k, a)| other.get(*k) == Some(a))
             && other.iter().all(|(k, a)| self.get(*k) == Some(a))
     }
 }
-impl<V> Eq for IntMap<V> where V: Eq {}
+impl<K, V> Eq for IntMap<K, V>
+where
+    K: BitAnd + Copy + HighestPrime + PartialEq + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
+    V: Eq,
+{
+}
 
 // ***************** Debug *********************
 
-impl<V> std::fmt::Debug for IntMap<V>
+impl<K, V> std::fmt::Debug for IntMap<K, V>
 where
+    K: std::fmt::Debug,
     V: std::fmt::Debug,
 {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {

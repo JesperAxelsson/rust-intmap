@@ -1,10 +1,16 @@
 use std::iter::FlatMap as IterFlatMap;
 use std::iter::Flatten as IterFlatten;
+use std::ops::BitAnd;
+use std::ops::Sub;
 use std::slice::Iter as SliceIter;
 use std::slice::IterMut as SliceIterMut;
 use std::vec::Drain as VecDrain;
 use std::vec::IntoIter as VecIntoIter;
 
+use num_traits::AsPrimitive;
+use num_traits::WrappingMul;
+
+use crate::highest_prime::HighestPrime;
 use crate::IntMap;
 
 // ***************** Iter *********************
@@ -113,9 +119,9 @@ impl<'a, K, V> Iterator for ValuesMut<'a, K, V> {
 
 // ***************** Into Iter *********************
 
-impl<V> IntoIterator for IntMap<V> {
-    type Item = (u64, V);
-    type IntoIter = IntoIter<u64, V>;
+impl<K, V> IntoIterator for IntMap<K, V> {
+    type Item = (K, V);
+    type IntoIter = IntoIter<K, V>;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter::new(self.cache)
@@ -179,9 +185,14 @@ impl<'a, K, V> Iterator for Drain<'a, K, V> {
 
 // ***************** Extend *********************
 
-impl<V> Extend<(u64, V)> for IntMap<V> {
+impl<K, V> Extend<(K, V)> for IntMap<K, V>
+where
+    K: AsPrimitive<usize> + BitAnd + Copy + HighestPrime + PartialEq + Sub + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
+    usize: AsPrimitive<K>,
+{
     #[inline]
-    fn extend<T: IntoIterator<Item = (u64, V)>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = (K, V)>>(&mut self, iter: T) {
         for elem in iter {
             self.insert(elem.0, elem.1);
         }
@@ -190,9 +201,14 @@ impl<V> Extend<(u64, V)> for IntMap<V> {
 
 // ***************** FromIterator *********************
 
-impl<V> std::iter::FromIterator<(u64, V)> for IntMap<V> {
+impl<K, V> std::iter::FromIterator<(K, V)> for IntMap<K, V>
+where
+    K: 'static + AsPrimitive<usize> + BitAnd + Copy + HighestPrime + PartialEq + Sub + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
+    usize: AsPrimitive<K>,
+{
     #[inline]
-    fn from_iter<T: IntoIterator<Item = (u64, V)>>(iter: T) -> Self {
+    fn from_iter<T: IntoIterator<Item = (K, V)>>(iter: T) -> Self {
         let iterator = iter.into_iter();
         let (lower_bound, _) = iterator.size_hint();
 

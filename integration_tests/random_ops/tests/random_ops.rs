@@ -32,7 +32,7 @@ proptest! {
     }
 }
 
-fn assert_map(map: &IntMap<u8>, reference: &HashMap<u64, u8>) {
+fn assert_map(map: &IntMap<u64, u8>, reference: &HashMap<u64, u8>) {
     let debug = false;
     if debug {
         println!(

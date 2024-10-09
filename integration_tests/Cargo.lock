@@ -186,6 +186,7 @@ dependencies = [
 name = "intmap"
 version = "2.0.0"
 dependencies = [
+ "num-traits",
  "serde",
 ]
 

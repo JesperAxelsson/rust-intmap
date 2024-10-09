@@ -1,11 +1,18 @@
-use crate::IntMap;
+use std::ops::{BitAnd, Sub};
+
+use crate::{highest_prime::HighestPrime, IntMap};
+use num_traits::{AsPrimitive, WrappingMul};
 use serde::{
     de::{Deserializer, MapAccess, Visitor},
     ser::SerializeMap,
     Deserialize, Serialize, Serializer,
 };
 
-impl<T: Serialize> Serialize for IntMap<T> {
+impl<K, V> Serialize for IntMap<K, V>
+where
+    K: Serialize,
+    V: Serialize,
+{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -18,7 +25,20 @@ impl<T: Serialize> Serialize for IntMap<T> {
     }
 }
 
-impl<'de, T: Deserialize<'de>> Deserialize<'de> for IntMap<T> {
+impl<'de, K, V> Deserialize<'de> for IntMap<K, V>
+where
+    K: AsPrimitive<usize>
+        + BitAnd
+        + Copy
+        + Deserialize<'de>
+        + HighestPrime
+        + PartialEq
+        + Sub
+        + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
+    usize: AsPrimitive<K>,
+    V: Deserialize<'de>,
+{
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
@@ -27,11 +47,11 @@ impl<'de, T: Deserialize<'de>> Deserialize<'de> for IntMap<T> {
     }
 }
 
-struct IntMapVisitor<V> {
-    marker: std::marker::PhantomData<fn() -> IntMap<V>>,
+struct IntMapVisitor<K, V> {
+    marker: std::marker::PhantomData<fn() -> IntMap<K, V>>,
 }
 
-impl<V> IntMapVisitor<V> {
+impl<K, V> IntMapVisitor<K, V> {
     fn new() -> Self {
         IntMapVisitor {
             marker: std::marker::PhantomData,
@@ -39,11 +59,21 @@ impl<V> IntMapVisitor<V> {
     }
 }
 
-impl<'de, V> Visitor<'de> for IntMapVisitor<V>
+impl<'de, K, V> Visitor<'de> for IntMapVisitor<K, V>
 where
+    K: AsPrimitive<usize>
+        + BitAnd
+        + Copy
+        + Deserialize<'de>
+        + HighestPrime
+        + PartialEq
+        + Sub
+        + WrappingMul,
+    <K as BitAnd>::Output: AsPrimitive<usize>,
+    usize: AsPrimitive<K>,
     V: Deserialize<'de>,
 {
-    type Value = IntMap<V>;
+    type Value = IntMap<K, V>;
 
     fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "IntMap<{}>", std::any::type_name::<V>())

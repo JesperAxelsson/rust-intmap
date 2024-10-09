@@ -322,7 +322,7 @@ fn u64_insert_without_capacity_intmap(bencher: Bencher) {
 #[bench]
 fn u64_resize_intmap(bencher: Bencher) {
     bencher.bench_local(|| {
-        let mut map: IntMap<u64> = IntMap::new();
+        let mut map: IntMap<u64, u64> = IntMap::new();
         map.reserve(VEC_COUNT);
         black_box(&map);
     });

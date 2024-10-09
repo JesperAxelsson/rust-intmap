@@ -1,7 +1,7 @@
 [![crates.io](https://img.shields.io/crates/v/intmap.svg)](https://crates.io/crates/intmap)
 
 # rust-intmap
-Specialized hashmap for `u64` keys
+Specialized hashmap for unsigned primitive keys
 
 Might be missing some functionality but you can remove, add, get and clear for now.
 
@@ -47,13 +47,13 @@ use intmap::IntMap;
 
 let mut map = IntMap::new();
 
-for i in 0..20_000 {
+for i in 0..20_000u32 {
     map.insert(i, format!("item: {:?}", i));
 }
 ```
 
 # How can it be so much faster?
-I use a specialized hash function for `u64` which multiplies the key with the largest prime for `u64`. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as mentioned in [this Stack Overflow post](http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators). The hash function looks like this:
+I use a specialized hash function, which multiplies the key with the largest prime for its type. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as mentioned in [this Stack Overflow post](http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators). The hash function looks like this:
 
 ```rust
 #[inline]

@@ -79,7 +79,7 @@ impl Ctor {
         ]
     }
 
-    pub fn apply(&self) -> (IntMap<u8>, HashMap<u64, u8>) {
+    pub fn apply(&self) -> (IntMap<u64, u8>, HashMap<u64, u8>) {
         match self {
             Self::New => (IntMap::new(), HashMap::new()),
             Self::WithCapacity(capacity) => (IntMap::with_capacity(capacity.0), HashMap::new()),
@@ -160,7 +160,7 @@ impl Op {
         ]
     }
 
-    pub fn apply(&self, map: &mut IntMap<u8>, reference: &mut HashMap<u64, u8>) {
+    pub fn apply(&self, map: &mut IntMap<u64, u8>, reference: &mut HashMap<u64, u8>) {
         match self {
             Self::SetLoadFactor(load_factor) => {
                 map.set_load_factor(load_factor.0);

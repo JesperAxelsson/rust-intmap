@@ -16,7 +16,7 @@ mod highest_prime;
 mod iter;
 
 use core::iter::{IntoIterator, Iterator};
-use highest_prime::HighestPrime;
+pub use highest_prime::HighestPrime;
 use iter::*;
 use std::ops::{BitAnd, Sub};
 

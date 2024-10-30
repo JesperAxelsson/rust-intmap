@@ -215,6 +215,7 @@ version = "0.1.0"
 dependencies = [
  "intmap",
  "proptest",
+ "serde",
  "serde_json",
 ]
 

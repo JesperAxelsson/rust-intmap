@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-/// An integer that can be used as underlying key for [`IntMap`].
+/// A primitive integer that can be used as underlying key for [`IntMap`].
 ///
 /// Note that this is a sealed trait that cannot be implemented externally. Consider implementing
 /// [`IntKey`] instead.

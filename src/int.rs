@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 /// A primitive integer that can be used as underlying key for [`IntMap`].
 ///
 /// Note that this is a sealed trait that cannot be implemented externally. Consider implementing
@@ -22,15 +20,9 @@ impl Int for i64 {}
 impl Int for i128 {}
 impl Int for isize {}
 
-pub trait SealedInt: Copy + PartialEq + Debug + SerdeInt {
+pub trait SealedInt: Copy + PartialEq {
     fn calc_index(self, mod_mask: usize) -> usize;
 }
-
-#[cfg(not(feature = "serde"))]
-pub trait SerdeInt {}
-
-#[cfg(feature = "serde")]
-pub trait SerdeInt: serde::Serialize + for<'de> serde::Deserialize<'de> {}
 
 macro_rules! impl_sealed_int_for_int_with_highest_prime {
     ($uint:ident, $prime:expr) => {
@@ -42,8 +34,6 @@ macro_rules! impl_sealed_int_for_int_with_highest_prime {
                 (hash as usize) & mod_mask
             }
         }
-
-        impl SerdeInt for $uint {}
     };
 }
 
@@ -55,8 +45,6 @@ macro_rules! impl_sealed_int_for_int_with_cast {
                 (self as $uint).calc_index(mod_mask)
             }
         }
-
-        impl SerdeInt for $int {}
     };
 }
 

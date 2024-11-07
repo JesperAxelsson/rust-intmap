@@ -11,6 +11,25 @@ use crate::Int;
 /// This can be useful for types that wraps integers for type safety (e.g. [`Ipv4Addr`])
 /// or for enforcing invariants (e.g. [`NonZeroU64`]).
 ///
+/// # Example
+///
+/// ```
+/// use intmap::{IntKey, IntMap};
+///
+/// #[derive(Clone, Copy)]
+/// struct MyKey(u64);
+///
+/// impl IntKey for MyKey {
+///     type Int = u64;
+///
+///     fn into_int(self) -> Self::Int {
+///         self.0
+///     }
+/// }
+///
+/// let map: IntMap<MyKey, f32> = IntMap::new();
+/// ```
+///
 /// [`IntMap`]: crate::IntMap
 /// [`Ipv4Addr`]: std::net::Ipv4Addr
 /// [`NonZeroU64`]: std::num::NonZeroU64

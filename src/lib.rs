@@ -146,7 +146,7 @@ impl<K: IntKey, V> IntMap<K, V> {
         self.ensure_load_rate();
 
         let k = key.into_int();
-        let ix = k.calc_index(self.mod_mask);
+        let ix = k.calc_index(self.mod_mask, K::PRIME);
 
         let vals = &mut self.cache[ix];
         let pos = vals.iter().position(|kv| kv.0.into_int() == k);
@@ -182,7 +182,7 @@ impl<K: IntKey, V> IntMap<K, V> {
         self.ensure_load_rate();
 
         let k = key.into_int();
-        let ix = k.calc_index(self.mod_mask);
+        let ix = k.calc_index(self.mod_mask, K::PRIME);
 
         let vals = &mut self.cache[ix];
         if vals.iter().any(|kv| kv.0.into_int() == k) {
@@ -215,7 +215,7 @@ impl<K: IntKey, V> IntMap<K, V> {
         }
 
         let k = key.into_int();
-        let ix = k.calc_index(self.mod_mask);
+        let ix = k.calc_index(self.mod_mask, K::PRIME);
 
         let vals = &self.cache[ix];
 
@@ -248,7 +248,7 @@ impl<K: IntKey, V> IntMap<K, V> {
         }
 
         let k = key.into_int();
-        let ix = k.calc_index(self.mod_mask);
+        let ix = k.calc_index(self.mod_mask, K::PRIME);
 
         let vals = &mut self.cache[ix];
 
@@ -277,7 +277,7 @@ impl<K: IntKey, V> IntMap<K, V> {
         }
 
         let k = key.into_int();
-        let ix = k.calc_index(self.mod_mask);
+        let ix = k.calc_index(self.mod_mask, K::PRIME);
 
         let vals = &mut self.cache[ix];
 
@@ -444,7 +444,7 @@ impl<K: IntKey, V> IntMap<K, V> {
 
         for key in vec.into_iter().flatten() {
             let k = key.0.into_int();
-            let ix = k.calc_index(self.mod_mask);
+            let ix = k.calc_index(self.mod_mask, K::PRIME);
 
             let vals = &mut self.cache[ix];
             vals.push(key);

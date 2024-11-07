@@ -34,7 +34,7 @@ impl<'a, K: IntKey, V> Entry<'a, K, V> {
         }
 
         let k = key.into_int();
-        let cache_ix = k.calc_index(int_map.mod_mask);
+        let cache_ix = k.calc_index(int_map.mod_mask, K::PRIME);
 
         let vals = &int_map.cache[cache_ix];
         let vals_ix = { vals.iter() }

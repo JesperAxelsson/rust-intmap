@@ -53,7 +53,7 @@ for i in 0..20_000 {
 ```
 
 # How can it be so much faster?
-I use a specialized hash function for integers which multiplies the key with the their largest prime. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as mentioned in [this Stack Overflow post](http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators). The hash function looks like this:
+I use a specialized hash function for integers which multiplies the key with their largest prime. By keeping the internal cache a power 2 you can avoid the expensive modulus operator as mentioned in [this Stack Overflow post](http://stackoverflow.com/questions/6670715/mod-of-power-2-on-bitwise-operators). The hash function looks like this:
 
 ```rust
 #[inline]

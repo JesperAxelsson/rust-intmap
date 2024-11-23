@@ -17,13 +17,13 @@ fn main() {
 #[bench]
 fn u64_insert_built_in(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = HashMap::with_capacity(data.len());
+    let mut map: HashMap<u64, u64> = HashMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -33,10 +33,10 @@ fn u64_insert_without_capacity_built_in(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
-        let mut map = HashMap::new();
+        let mut map: HashMap<u64, u64> = HashMap::new();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
 
         black_box(&map);
@@ -46,10 +46,10 @@ fn u64_insert_without_capacity_built_in(bencher: Bencher) {
 #[bench]
 fn u64_get_built_in(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map: HashMap<&u64, &u64> = HashMap::with_capacity(data.len());
+    let mut map: HashMap<u64, u64> = HashMap::with_capacity(data.len());
 
     for s in data.iter() {
-        black_box(map.insert(s, s));
+        black_box(map.insert(*s, *s));
     }
 
     bencher.bench_local(|| {
@@ -87,13 +87,14 @@ impl std::hash::BuildHasher for NoOpHasher {
 #[bench]
 fn u64_insert_no_op(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = HashMap::with_capacity_and_hasher(data.len(), NoOpHasher(0));
+    let mut map: HashMap<u64, u64, NoOpHasher> =
+        HashMap::with_capacity_and_hasher(data.len(), NoOpHasher(0));
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -103,10 +104,10 @@ fn u64_insert_without_capacity_no_op(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
-        let mut map = HashMap::with_hasher(NoOpHasher(0));
+        let mut map: HashMap<u64, u64, NoOpHasher> = HashMap::with_hasher(NoOpHasher(0));
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
 
         black_box(&map);
@@ -116,11 +117,11 @@ fn u64_insert_without_capacity_no_op(bencher: Bencher) {
 #[bench]
 fn u64_get_no_op(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map: HashMap<&u64, &u64, NoOpHasher> =
+    let mut map: HashMap<u64, u64, NoOpHasher> =
         HashMap::with_capacity_and_hasher(data.len(), NoOpHasher(0));
 
     for s in data.iter() {
-        black_box(map.insert(s, s));
+        black_box(map.insert(*s, *s));
     }
 
     bencher.bench_local(|| {
@@ -135,13 +136,13 @@ fn u64_get_no_op(bencher: Bencher) {
 #[bench]
 fn u64_insert_brown(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = BrownMap::with_capacity(data.len());
+    let mut map: BrownMap<u64, u64> = BrownMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -151,10 +152,10 @@ fn u64_insert_without_capacity_brown(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
-        let mut map = BrownMap::new();
+        let mut map: BrownMap<u64, u64> = BrownMap::new();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
 
         black_box(&map);
@@ -164,10 +165,10 @@ fn u64_insert_without_capacity_brown(bencher: Bencher) {
 #[bench]
 fn u64_get_brown(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map: BrownMap<&u64, &u64> = BrownMap::with_capacity(data.len());
+    let mut map: BrownMap<u64, u64> = BrownMap::with_capacity(data.len());
 
     for s in data.iter() {
-        black_box(map.insert(s, s));
+        black_box(map.insert(*s, *s));
     }
 
     bencher.bench_local(|| {
@@ -182,13 +183,13 @@ fn u64_get_brown(bencher: Bencher) {
 #[bench]
 fn u64_insert_ahash(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = AHashMap::with_capacity(data.len());
+    let mut map: AHashMap<u64, u64> = AHashMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -198,10 +199,10 @@ fn u64_insert_without_capacity_ahash(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
-        let mut map = AHashMap::new();
+        let mut map: AHashMap<u64, u64> = AHashMap::new();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
 
         black_box(&map);
@@ -211,10 +212,10 @@ fn u64_insert_without_capacity_ahash(bencher: Bencher) {
 #[bench]
 fn u64_get_ahash(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map: AHashMap<&u64, &u64> = AHashMap::with_capacity(data.len());
+    let mut map: AHashMap<u64, u64> = AHashMap::with_capacity(data.len());
 
     for s in data.iter() {
-        black_box(map.insert(s, s));
+        black_box(map.insert(*s, *s));
     }
 
     bencher.bench_local(|| {
@@ -229,13 +230,13 @@ fn u64_get_ahash(bencher: Bencher) {
 #[bench]
 fn u64_insert_indexmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = IndexMap::with_capacity(data.len());
+    let mut map: IndexMap<u64, u64> = IndexMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -243,10 +244,10 @@ fn u64_insert_indexmap(bencher: Bencher) {
 #[bench]
 fn u64_get_indexmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map: IndexMap<&u64, &u64> = IndexMap::with_capacity(data.len());
+    let mut map: IndexMap<u64, u64> = IndexMap::with_capacity(data.len());
 
     for s in data.iter() {
-        black_box(map.insert(s, s));
+        black_box(map.insert(*s, *s));
     }
 
     bencher.bench_local(|| {
@@ -261,13 +262,13 @@ fn u64_get_indexmap(bencher: Bencher) {
 #[bench]
 fn u64_insert_intmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = IntMap::with_capacity(data.len());
+    let mut map: IntMap<u64, u64> = IntMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert(*s, s));
+            black_box(map.insert(*s, *s));
         }
     });
 }
@@ -275,13 +276,13 @@ fn u64_insert_intmap(bencher: Bencher) {
 #[bench]
 fn u64_insert_intmap_checked(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
-    let mut map = IntMap::with_capacity(data.len());
+    let mut map: IntMap<u64, u64> = IntMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
 
         for s in data.iter() {
-            black_box(map.insert_checked(*s, s));
+            black_box(map.insert_checked(*s, *s));
         }
     });
 }
@@ -290,7 +291,7 @@ fn u64_insert_intmap_checked(bencher: Bencher) {
 fn u64_insert_intmap_entry(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
-    let mut map = IntMap::with_capacity(data.len());
+    let mut map: IntMap<u64, u64> = IntMap::with_capacity(data.len());
 
     bencher.bench_local(|| {
         map.clear();
@@ -298,7 +299,7 @@ fn u64_insert_intmap_entry(bencher: Bencher) {
         for s in data.iter() {
             black_box(match map.entry(*s) {
                 Entry::Occupied(_) => panic!("unexpected while insert, i = {}", s),
-                Entry::Vacant(entry) => entry.insert(s),
+                Entry::Vacant(entry) => entry.insert(*s),
             });
         }
     });
@@ -309,10 +310,10 @@ fn u64_insert_without_capacity_intmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
     bencher.bench_local(|| {
-        let mut map = IntMap::new();
+        let mut map: IntMap<u64, u64> = IntMap::new();
 
         for s in data.iter() {
-            black_box(map.insert(*s, s));
+            black_box(map.insert(*s, *s));
         }
 
         black_box(&map);
@@ -322,7 +323,7 @@ fn u64_insert_without_capacity_intmap(bencher: Bencher) {
 #[bench]
 fn u64_resize_intmap(bencher: Bencher) {
     bencher.bench_local(|| {
-        let mut map: IntMap<u64> = IntMap::new();
+        let mut map: IntMap<u64, u64> = IntMap::new();
         map.reserve(VEC_COUNT);
         black_box(&map);
     });
@@ -332,9 +333,9 @@ fn u64_resize_intmap(bencher: Bencher) {
 fn u64_get_intmap(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
 
-    let mut map = IntMap::with_capacity(data.len());
+    let mut map: IntMap<u64, u64> = IntMap::with_capacity(data.len());
     for s in data.iter() {
-        map.insert(*s, s);
+        map.insert(*s, *s);
     }
 
     bencher.bench_local(|| {

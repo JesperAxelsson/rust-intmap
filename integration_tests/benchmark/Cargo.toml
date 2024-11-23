@@ -16,3 +16,7 @@ rand = "0.8.5"
 [[bench]]
 name = "basic_bench"
 harness = false
+
+[[bench]]
+name = "key_comparison"
+harness = false

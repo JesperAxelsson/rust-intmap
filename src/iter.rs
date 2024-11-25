@@ -10,6 +10,9 @@ use crate::IntMap;
 
 // ***************** Iter *********************
 
+/// An iterator over the entries of a [`IntMap`]
+///
+/// This struct is created by [`IntMap::iter`].
 pub struct Iter<'a, K: IntKey, V> {
     inner: IterFlatten<SliceIter<'a, Vec<(K, V)>>>,
 }
@@ -33,6 +36,9 @@ impl<'a, K: IntKey, V> Iterator for Iter<'a, K, V> {
 
 // ***************** Iter Mut *********************
 
+/// A mutable iterator over the entries of a [`IntMap`].
+///
+/// This struct is created by [`IntMap::iter_mut`].
 pub struct IterMut<'a, K: IntKey, V> {
     inner: IterFlatten<SliceIterMut<'a, Vec<(K, V)>>>,
 }
@@ -56,6 +62,9 @@ impl<'a, K: IntKey, V> Iterator for IterMut<'a, K, V> {
 
 // ***************** Keys Iter *********************
 
+/// An iterator over the keys of a [`IntMap`].
+///
+/// This struct is created by [`IntMap::keys`].
 pub struct Keys<'a, K: IntKey, V> {
     pub(crate) inner: Iter<'a, K, V>,
 }
@@ -75,6 +84,9 @@ impl<'a, K: IntKey, V> Iterator for Keys<'a, K, V> {
 
 // ***************** Values Iter *********************
 
+/// An iterator over the values of a [`IntMap`].
+///
+/// This struct is created by [`IntMap::values`].
 pub struct Values<'a, K: IntKey, V> {
     pub(crate) inner: Iter<'a, K, V>,
 }
@@ -94,6 +106,9 @@ impl<'a, K: IntKey, V> Iterator for Values<'a, K, V> {
 
 // ***************** Values Mut *********************
 
+/// A mutable iterator over the values of a [`IntMap`].
+///
+/// This struct is created by [`IntMap::values_mut`].
 pub struct ValuesMut<'a, K: IntKey, V> {
     pub(crate) inner: IterMut<'a, K, V>,
 }
@@ -123,6 +138,9 @@ impl<K: IntKey, V> IntoIterator for IntMap<K, V> {
     }
 }
 
+/// An owning iterator over the entries of a [`IntMap`].
+///
+/// This struct is created by [`IntMap::into_iter`].
 pub struct IntoIter<K: IntKey, V> {
     inner: IterFlatten<VecIntoIter<Vec<(K, V)>>>,
 }
@@ -146,6 +164,9 @@ impl<K: IntKey, V> Iterator for IntoIter<K, V> {
 
 // ***************** Drain Iter *********************
 
+/// A draining iterator for [`IntMap`].
+///
+/// This struct is created by [`IntMap::drain`].
 #[allow(clippy::type_complexity)]
 pub struct Drain<'a, K: IntKey, V> {
     count: &'a mut usize,

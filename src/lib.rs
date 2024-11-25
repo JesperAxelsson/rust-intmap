@@ -22,7 +22,7 @@ use int::SealedInt;
 pub use entry::*;
 pub use int::Int;
 pub use int_key::IntKey;
-use iter::*;
+pub use iter::*;
 
 // Test examples from the README.
 #[doc = include_str!("../README.md")]

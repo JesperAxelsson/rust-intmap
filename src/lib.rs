@@ -588,8 +588,8 @@ where
     V: PartialEq,
 {
     fn eq(&self, other: &IntMap<K, V>) -> bool {
-        self.iter().all(|(&k, a)| other.get(k) == Some(a))
-            && other.iter().all(|(&k, a)| self.get(k) == Some(a))
+        self.iter().all(|(k, a)| other.get(k) == Some(a))
+            && other.iter().all(|(k, a)| self.get(k) == Some(a))
     }
 }
 impl<K: IntKey, V: Eq> Eq for IntMap<K, V> {}

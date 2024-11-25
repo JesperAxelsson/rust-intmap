@@ -23,11 +23,11 @@ impl<'a, K: IntKey, V> Iter<'a, K, V> {
 }
 
 impl<'a, K: IntKey, V> Iterator for Iter<'a, K, V> {
-    type Item = (&'a K, &'a V);
+    type Item = (K, &'a V);
 
     #[inline]
-    fn next(&mut self) -> Option<(&'a K, &'a V)> {
-        self.inner.next().map(|r| (&r.0, &r.1))
+    fn next(&mut self) -> Option<(K, &'a V)> {
+        self.inner.next().map(|r| (r.0, &r.1))
     }
 }
 
@@ -46,11 +46,11 @@ impl<'a, K: IntKey, V> IterMut<'a, K, V> {
 }
 
 impl<'a, K: IntKey, V> Iterator for IterMut<'a, K, V> {
-    type Item = (&'a K, &'a mut V);
+    type Item = (K, &'a mut V);
 
     #[inline]
-    fn next(&mut self) -> Option<(&'a K, &'a mut V)> {
-        self.inner.next().map(|r| (&r.0, &mut r.1))
+    fn next(&mut self) -> Option<(K, &'a mut V)> {
+        self.inner.next().map(|r| (r.0, &mut r.1))
     }
 }
 
@@ -61,10 +61,10 @@ pub struct Keys<'a, K: IntKey, V> {
 }
 
 impl<'a, K: IntKey, V> Iterator for Keys<'a, K, V> {
-    type Item = &'a K;
+    type Item = K;
 
     #[inline]
-    fn next(&mut self) -> Option<&'a K> {
+    fn next(&mut self) -> Option<K> {
         self.inner.next().map(|kv| kv.0)
     }
     #[inline]

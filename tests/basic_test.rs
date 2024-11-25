@@ -179,7 +179,7 @@ mod tests {
         }
 
         for (k, v) in map.iter() {
-            assert_eq!(*k, *v);
+            assert_eq!(k, *v);
         }
     }
 
@@ -194,7 +194,7 @@ mod tests {
         }
 
         for k in map.keys() {
-            assert_eq!(*k, data[*k as usize]);
+            assert_eq!(k, data[k as usize]);
         }
     }
 
@@ -326,7 +326,7 @@ mod tests {
 
         assert_eq!(map_1.len(), (count * 2) as usize);
 
-        for (k, v) in map_1.iter() {
+        for (k, &v) in map_1.iter() {
             assert_eq!(k, v);
         }
     }
@@ -341,7 +341,7 @@ mod tests {
             assert!(map.contains_key(k));
         }
 
-        for (&k, &v) in map.iter() {
+        for (k, &v) in map.iter() {
             assert_eq!(k * k, v);
         }
     }
@@ -385,8 +385,8 @@ mod tests {
 
         assert_eq!(map.len(), count as usize);
 
-        for (k, v) in map.iter() {
-            assert_eq!(*v, data[*k as usize]);
+        for (k, &v) in map.iter() {
+            assert_eq!(v, data[k as usize]);
         }
 
         // Replace values 0..19999 with 20000..39999
@@ -404,8 +404,8 @@ mod tests {
 
         assert_eq!(map.len(), count as usize);
 
-        for (k, v) in map.iter() {
-            assert_eq!(*v, count + data[*k as usize]);
+        for (k, &v) in map.iter() {
+            assert_eq!(v, count + data[k as usize]);
         }
 
         // Remove values 20000..39999

@@ -5,6 +5,12 @@
 ### Changed
 
 - `IntMap::new` is now const and creates an instance with zero capacity, thus will not allocate. The latter is also true for `IntMap::default`. Previously the initial capacity was 4. If you want to restore the old behavior, you can use `IntMap::with_capacity(4)`.
+- The prime for hashing `u64` keys has changed. The previous one was `11400714819323198549u64`. If you want to restore the old prime, you can create a wrapper type for the `u64` key and implement `IntKey` for it.
+- Make all iterator structs public.
+
+### Changed Breaking!
+- `IntMap` and co. have now a new type parameter `K` that represents the key type. The key can be any primitive integer. Custom types that wrap primitive integers are also supported if they implement `IntKey`.
+- The iterator structs return the key by value instead of by reference.
 
 ## [2.0.0] 2022-07-17
 

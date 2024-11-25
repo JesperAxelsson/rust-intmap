@@ -35,7 +35,8 @@ test tests::u64_insert_no_op_without_capacity    ... bench:     190,528.64 ns/it
 test tests::u64_resize_intmap                    ... bench:      55,155.88 ns/iter (+/- 648.32)
 ```
 # Breaking Changes
-2.0.0 - Changed behavior of `insert` to match std::HashMap. The old behavior is renamed to `insert_checked`. 
+
+Breaking changes are documented in the [CHANGELOG.md].
 
 # How to use
 Simple example:

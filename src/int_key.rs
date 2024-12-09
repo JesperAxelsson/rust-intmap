@@ -49,6 +49,8 @@ pub trait IntKey: Copy {
     ///
     /// [`IntMap`] assumes that this is a cheap operation and that two different values
     /// don't return the same integer.
+    ///
+    /// [`IntMap`]: crate::IntMap
     fn into_int(self) -> Self::Int;
 }
 

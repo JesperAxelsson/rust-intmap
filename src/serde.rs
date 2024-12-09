@@ -16,7 +16,7 @@ where
     {
         let mut map = serializer.serialize_map(Some(self.len()))?;
         for (k, v) in self.iter() {
-            map.serialize_entry(k, v)?;
+            map.serialize_entry(&k, v)?;
         }
         map.end()
     }

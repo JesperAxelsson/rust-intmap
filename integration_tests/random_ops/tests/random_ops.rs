@@ -82,7 +82,7 @@ fn test_random_ops<K: TestIntKey + Ord>(ctor: Ctor<K>, ops: Vec<Op<K>>) {
     let mut map_values = map.iter().collect::<Vec<_>>();
     map_values.sort_by_key(|(key, _)| *key);
 
-    let mut reference_values = reference.iter().collect::<Vec<_>>();
+    let mut reference_values = reference.iter().map(|(&k, v)| (k, v)).collect::<Vec<_>>();
     reference_values.sort_by_key(|(key, _)| *key);
 
     assert_eq!(map_values, reference_values);

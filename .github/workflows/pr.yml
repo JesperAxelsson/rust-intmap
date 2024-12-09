@@ -7,10 +7,10 @@ jobs:
     strategy:
       matrix:
         rust:
-          - version: 1.58.1
-            integration-tests: false
           - version: 1.80.1
             integration-tests: true
+          - version: 1.58.1
+            integration-tests: false
 
     steps:
       - uses: actions/checkout@v2

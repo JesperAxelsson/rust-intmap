@@ -36,7 +36,7 @@ test tests::u64_resize_intmap                    ... bench:      55,155.88 ns/it
 ```
 # Breaking Changes
 
-Breaking changes are documented in the [CHANGELOG.md].
+Breaking changes are documented in the [changelog](CHANGELOG.md).
 
 # How to use
 Simple example:

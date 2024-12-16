@@ -112,7 +112,7 @@ impl<K: IntKey, V> IntMap<K, V> {
     /// ```
     pub fn set_load_factor(&mut self, load_factor: f32) {
         self.load_factor = (load_factor * 1000.) as usize;
-        self.ensure_load_rate();
+        self.increase_cache_if_needed();
     }
 
     /// Returns the current load factor.
@@ -143,7 +143,7 @@ impl<K: IntKey, V> IntMap<K, V> {
     /// assert_eq!(map.get(21), Some(&"Ay, caramba"));
     /// ```
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        self.ensure_load_rate();
+        self.increase_cache_if_needed();
 
         let k = key.into_int();
         let ix = k.calc_index(self.mod_mask, K::PRIME);
@@ -179,7 +179,7 @@ impl<K: IntKey, V> IntMap<K, V> {
     /// assert_eq!(map.get(21), Some(&"Eat my shorts"));
     /// ```
     pub fn insert_checked(&mut self, key: K, value: V) -> bool {
-        self.ensure_load_rate();
+        self.increase_cache_if_needed();
 
         let k = key.into_int();
         let ix = k.calc_index(self.mod_mask, K::PRIME);
@@ -459,16 +459,20 @@ impl<K: IntKey, V> IntMap<K, V> {
     }
 
     #[inline]
-    fn ensure_load_rate(&mut self) {
+    fn increase_cache_if_needed(&mut self) -> bool {
+        let initial_cache_len = self.cache.len();
+
         // Handle empty cache to prevent division by zero.
         if self.cache.is_empty() {
-            self.increase_cache()
+            self.increase_cache();
         }
 
         // Tried using floats here but insert performance tanked.
         while ((self.count * 1000) / self.cache.len()) > self.load_factor {
             self.increase_cache();
         }
+
+        initial_cache_len != self.cache.len()
     }
 
     //**** More public methods *****

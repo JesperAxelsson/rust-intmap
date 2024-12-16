@@ -16,32 +16,36 @@ pub enum Entry<'a, K: IntKey, V: 'a> {
 impl<'a, K: IntKey, V> Entry<'a, K, V> {
     #[inline]
     pub(crate) fn new(key: K, int_map: &'a mut IntMap<K, V>) -> Self {
-        let indices = Self::indices(key, int_map);
+        let (cache_ix, vals_ix) = Self::indices(key, int_map);
 
-        match indices {
-            Some((cache_ix, vals_ix)) => Entry::Occupied(OccupiedEntry {
+        match vals_ix {
+            Some(vals_ix) => Entry::Occupied(OccupiedEntry {
                 vals_ix,
                 vals: &mut int_map.cache[cache_ix],
                 count: &mut int_map.count,
             }),
-            None => Entry::Vacant(VacantEntry { key, int_map }),
+            None => Entry::Vacant(VacantEntry {
+                key,
+                cache_ix,
+                int_map,
+            }),
         }
     }
 
-    fn indices(key: K, int_map: &IntMap<K, V>) -> Option<(usize, usize)> {
+    fn indices(key: K, int_map: &IntMap<K, V>) -> (usize, Option<usize>) {
         if int_map.is_empty() {
-            return None;
+            // Returning 0 is okay because we'll increase the cache and recalculate the index if the
+            // user calls `insert`.
+            return (0, None);
         }
 
         let k = key.into_int();
         let cache_ix = k.calc_index(int_map.mod_mask, K::PRIME);
 
         let vals = &int_map.cache[cache_ix];
-        let vals_ix = { vals.iter() }
-            .enumerate()
-            .find_map(|(vals_ix, (key, _))| (key.into_int() == k).then(|| vals_ix))?;
+        let vals_ix = vals.iter().position(|(key, _)| key.into_int() == k);
 
-        Some((cache_ix, vals_ix))
+        (cache_ix, vals_ix)
     }
 }
 
@@ -93,12 +97,21 @@ impl<'a, K: IntKey, V> OccupiedEntry<'a, K, V> {
 /// A view into a vacant entry in a [`IntMap`]. It is part of the [`Entry`] enum.
 pub struct VacantEntry<'a, K: IntKey, V: 'a> {
     key: K,
+    cache_ix: usize,
     int_map: &'a mut IntMap<K, V>,
 }
 
 impl<'a, K: IntKey, V: 'a> VacantEntry<'a, K, V> {
-    pub fn insert(self, value: V) -> &'a mut V {
-        self.int_map.insert(self.key, value);
-        return self.int_map.get_mut(self.key).unwrap();
+    pub fn insert(mut self, value: V) -> &'a mut V {
+        if self.int_map.increase_cache_if_needed() {
+            // Recompute cache_ix for the new size.
+            let k = self.key.into_int();
+            self.cache_ix = k.calc_index(self.int_map.mod_mask, K::PRIME);
+        }
+
+        self.int_map.count += 1;
+        let vals = &mut self.int_map.cache[self.cache_ix];
+        vals.push((self.key, value));
+        &mut vals.last_mut().unwrap().1
     }
 }

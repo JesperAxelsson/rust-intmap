@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+## [3.0.1] 2025-01-12
+### Changed
+- Avoid re-hashing (twice!) in VacantEntry::insert
 
 ## [3.0.0] 2024-12-09
 ### Changed

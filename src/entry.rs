@@ -70,17 +70,14 @@ impl<'a, K: IntKey, V> Entry<'a, K, V> {
     }
 
     /// Ensures a value is in the entry by inserting, if empty, the result of the provided function.
-    ///
-    /// Unlike its usefulness in standard hashmaps, since intmap keys are Copy this function is of little
-    /// particular use to intmaps but provided anyway to match the standard entry API
     pub fn or_insert_with_key<F>(self, default: F) -> &'a mut V
     where
-        F: FnOnce(&K) -> V,
+        F: FnOnce(K) -> V,
     {
         match self {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
-                let d = default(&entry.key);
+                let d = default(entry.key);
                 entry.insert(d)
             }
         }

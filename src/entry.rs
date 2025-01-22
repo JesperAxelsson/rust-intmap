@@ -33,7 +33,7 @@ impl<'a, K: IntKey, V> Entry<'a, K, V> {
     }
 
     fn indices(key: K, int_map: &IntMap<K, V>) -> (usize, Option<usize>) {
-        if int_map.is_empty() {
+        if int_map.cache.is_empty() {
             // Returning 0 is okay because we'll increase the cache and recalculate the index if the
             // user calls `insert`.
             return (0, None);

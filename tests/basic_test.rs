@@ -575,4 +575,18 @@ mod tests {
         assert!(map.load_rate() <= 200.);
         assert_eq!(format!("{:?}", map.collisions()), "{2: 8}");
     }
+
+    #[test]
+    fn insert_after_remove() {
+        let mut intmap = IntMap::new();
+        let key = 65;
+        intmap.insert(key, "foo");
+        intmap.remove(key);
+        let _ = match intmap.entry(key) {
+            intmap::Entry::Occupied(_) => unreachable!(),
+            intmap::Entry::Vacant(vacant_entry) => *vacant_entry.insert("bar"),
+        };
+        assert_eq!(format!("{:?}", intmap), "{65: \"bar\"}");
+        assert!(intmap.contains_key(key));
+    }
 }

@@ -154,6 +154,8 @@ pub enum Op<K> {
     Capacity,
     Collisions,
     Entry(Key<K>),
+    EntryInsert((Key<K>, Value)),
+    EntryRemove(Key<K>),
     Clone,
     Debug,
     Extend(Pairs<K>),
@@ -190,6 +192,8 @@ impl<K: TestIntKey> Op<K> {
             1 => Just(Self::Capacity),
             1 => Just(Self::Collisions),
             10 => Key::arb().prop_map(Self::Entry),
+            10 => (Key::arb(), Value::arb()).prop_map(Self::EntryInsert),
+            10 => Key::arb().prop_map(Self::EntryRemove),
             1 => Just(Self::Clone),
             1 => Just(Self::Debug),
             1 => Pairs::arb().prop_map(Self::Extend),
@@ -272,6 +276,23 @@ impl<K: TestIntKey> Op<K> {
             }
             Self::Entry(key) => {
                 map.entry(key.0);
+            }
+            Self::EntryInsert((key, value)) => {
+                match map.entry(key.0) {
+                    intmap::Entry::Occupied(mut entry) => {
+                        entry.insert(value.0);
+                    }
+                    intmap::Entry::Vacant(entry) => {
+                        entry.insert(value.0);
+                    }
+                }
+                reference.insert(key.0, value.0);
+            }
+            Self::EntryRemove(key) => {
+                if let intmap::Entry::Occupied(entry) = map.entry(key.0) {
+                    entry.remove();
+                }
+                reference.remove(&key.0);
             }
             Self::Clone => {
                 *map = map.clone();

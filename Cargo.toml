@@ -1,6 +1,6 @@
 [package]
 name = "intmap"
-version = "3.0.1"
+version = "3.1.0"
 edition = "2021"
 rust-version = "1.58"
 description = "Specialized HashMap for integer keys"

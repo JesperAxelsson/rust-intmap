@@ -47,6 +47,55 @@ impl<'a, K: IntKey, V> Entry<'a, K, V> {
 
         (cache_ix, vals_ix)
     }
+
+    /// Ensures a value is in the entry by inserting the provided value if empty, and returns
+    /// a mutable reference to the value in the entry.
+    pub fn or_insert(self, default: V) -> &'a mut V {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(default),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting the result of the provided function if empty,
+    /// and returns a mutable reference to the value in the entry.
+    pub fn or_insert_with<F>(self, default: F) -> &'a mut V
+    where
+        F: FnOnce() -> V,
+    {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(default()),
+        }
+    }
+
+    /// Ensures a value is in the entry by inserting, if empty, the result of the provided function.
+    pub fn or_insert_with_key<F>(self, default: F) -> &'a mut V
+    where
+        F: FnOnce(K) -> V,
+    {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => {
+                let d = default(entry.key);
+                entry.insert(d)
+            }
+        }
+    }
+}
+
+impl<'a, K: IntKey, V> Entry<'a, K, V>
+where
+    V: Default,
+{
+    /// Ensures a value is in the entry by inserting the default value if empty,
+    /// and returns a mutable reference to the value in the entry.
+    pub fn or_default(self) -> &'a mut V {
+        match self {
+            Entry::Occupied(entry) => entry.into_mut(),
+            Entry::Vacant(entry) => entry.insert(Default::default()),
+        }
+    }
 }
 
 /// A view into an occupied entry in a [`IntMap`]. It is part of the [`Entry`] enum.

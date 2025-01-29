@@ -422,6 +422,94 @@ mod tests {
     }
 
     #[test]
+    fn entry_or_insert_with() {
+        let mut map: IntMap<u64, u64> = IntMap::new();
+
+        map.insert(10, 100);
+
+        let mut triggered = false;
+        let v = map.entry(10).or_insert_with(|| {
+            triggered = true;
+            1337
+        });
+
+        assert!(!triggered);
+        assert_ne!(*v, 1337);
+
+        let mut triggered = false;
+        let v = map.entry(239048).or_insert_with(|| {
+            triggered = true;
+            42
+        });
+
+        assert!(triggered);
+        assert_eq!(*v, 42);
+    }
+
+    #[test]
+    fn entry_or_default() {
+        let mut map: IntMap<u64, u64> = IntMap::new();
+
+        let cases = [
+            (10, 1337),
+            (1028390123, 1337),
+            (12098312, 08082934),
+            (123981, 1337),
+            (23498902348, 1337),
+            (2198312093, 12983),
+        ];
+
+        let def: u64 = Default::default();
+
+        for (key, value) in cases {
+            assert!(!map.contains_key(key));
+            let it = map.entry(key).or_default();
+
+            assert_eq!(*it, def);
+            assert_eq!(*map.get(key).unwrap(), def);
+
+            let it = map.entry(key).or_insert(value);
+            assert_ne!(*it, value);
+            assert_eq!(*it, def);
+
+            *it = value;
+            let it = map.entry(key).or_default();
+            assert_ne!(*it, def);
+            assert_eq!(*it, value);
+        }
+    }
+
+    #[test]
+    fn entry_or_insert() {
+        let mut map: IntMap<u64, u64> = IntMap::new();
+
+        let cases = [
+            (10, 1337, 424242, 69),
+            (10280123, 1337, 424242, 19283),
+            (12091292, 08082934, 424242, 1029381092),
+            (12390331, 1337, 429138, 19283),
+            (23492348, 3912, 93925, 12309182),
+            (21982093, 12983, 491832, 120398213),
+        ];
+
+        for (key, value_1, value_2, value_3) in cases {
+            assert!(!map.contains_key(key));
+            let it = map.entry(key).or_insert(value_1);
+
+            assert_eq!(*it, value_1);
+            assert_eq!(*map.get(key).unwrap(), value_1);
+
+            let it = map.entry(key).or_insert(value_2);
+            assert_ne!(*it, value_2);
+            assert_eq!(*it, value_1);
+
+            *it = value_3;
+            let it = map.entry(key).or_insert(value_2);
+            assert_eq!(*it, value_3);
+        }
+    }
+
+    #[test]
     fn test_debug_features() {
         let count = 20_000;
         let mut map: IntMap<u64, u64> = IntMap::new();

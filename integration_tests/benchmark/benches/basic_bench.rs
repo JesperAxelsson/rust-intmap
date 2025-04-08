@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use ahash::AHashMap;
+use rustc_hash::{FxHashMap, FxBuildHasher};
 use divan::{bench, black_box, Bencher};
 use hashbrown::HashMap as BrownMap;
 use indexmap::IndexMap;
@@ -213,6 +214,53 @@ fn u64_insert_without_capacity_ahash(bencher: Bencher) {
 fn u64_get_ahash(bencher: Bencher) {
     let data = get_random_range(VEC_COUNT);
     let mut map: AHashMap<u64, u64> = AHashMap::with_capacity(data.len());
+
+    for s in data.iter() {
+        black_box(map.insert(*s, *s));
+    }
+
+    bencher.bench_local(|| {
+        for s in data.iter() {
+            black_box(map.contains_key(s));
+        }
+    });
+}
+
+// ********** FxHashMap **********
+
+#[bench]
+fn u64_insert_fxhashmap(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map: FxHashMap<u64, u64> = FxHashMap::with_capacity_and_hasher(data.len(), FxBuildHasher);
+
+    bencher.bench_local(|| {
+        map.clear();
+
+        for s in data.iter() {
+            black_box(map.insert(*s, *s));
+        }
+    });
+}
+
+#[bench]
+fn u64_insert_without_capacity_fxhashmap(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+
+    bencher.bench_local(|| {
+        let mut map: FxHashMap<u64, u64> = FxHashMap::default();
+
+        for s in data.iter() {
+            black_box(map.insert(*s, *s));
+        }
+
+        black_box(&map);
+    });
+}
+
+#[bench]
+fn u64_get_fxhashmap(bencher: Bencher) {
+    let data = get_random_range(VEC_COUNT);
+    let mut map: FxHashMap<u64, u64> = FxHashMap::with_capacity_and_hasher(data.len(), FxBuildHasher);
 
     for s in data.iter() {
         black_box(map.insert(*s, *s));

@@ -8,10 +8,11 @@ publish = false
 [dev-dependencies]
 ahash = "0.8.11"
 divan = "0.1.14"
-hashbrown = "0.14.5"
-indexmap = "1.8.2"
+hashbrown = "0.15.2"
+indexmap = "2.9.0"
 intmap = { path = "../.." }
 rand = "0.8.5"
+rustc-hash = "2.1.1"
 
 [[bench]]
 name = "basic_bench"

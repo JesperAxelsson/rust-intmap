@@ -32,6 +32,10 @@ basic_bench                              fastest       │ slowest       │ med
 ├─ u64_insert_without_capacity_intmap    744.4 µs      │ 772.3 µs      │ 752.6 µs      │ 753.8 µs      │ 100     │ 100
 ├─ u64_insert_without_capacity_no_op     160.3 µs      │ 178 µs        │ 161.7 µs      │ 164.9 µs      │ 100     │ 100
 ```
+
+You can run by runnin `cargo bench` in the `integration_tests` directory.
+
+
 # Breaking Changes
 
 Breaking changes are documented in the [changelog](CHANGELOG.md).

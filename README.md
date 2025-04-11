@@ -3,36 +3,34 @@
 # rust-intmap
 Specialized hashmap for integer keys.
 
-Might be missing some functionality but you can remove, add, get and clear for now.
-
 > [!WARNING]  
 > Be aware that no effort is made against DoS attacks.
 
 Benchmarks were performed on an AMD Ryzen 9 3900X running Manjaro with kernel version 6.6.40. Please remember to perform your own benchmarks if performance is important for your application.
 
-Performance compared to the standard hashmap and hashbrown:
+Performance of 10 000 elements compared to some other common hash tables:
 
 ```txt
-test tests::u64_get_ahash                        ... bench:      33,612.79 ns/iter (+/- 1,338.91)
-test tests::u64_get_brown                        ... bench:      34,459.40 ns/iter (+/- 563.82)
-test tests::u64_get_built_in                     ... bench:     136,051.06 ns/iter (+/- 4,299.34)
-test tests::u64_get_indexmap                     ... bench:     152,267.24 ns/iter (+/- 1,558.03)
-test tests::u64_get_intmap                       ... bench:      30,576.66 ns/iter (+/- 1,642.70)
-test tests::u64_get_no_op                        ... bench:      19,615.53 ns/iter (+/- 458.64)
-test tests::u64_insert_ahash                     ... bench:     113,385.46 ns/iter (+/- 874.49)
-test tests::u64_insert_ahash_without_capacity    ... bench:     258,242.55 ns/iter (+/- 54,208.86)
-test tests::u64_insert_brown                     ... bench:     106,650.39 ns/iter (+/- 4,901.79)
-test tests::u64_insert_brown_without_capacity    ... bench:     266,451.22 ns/iter (+/- 3,946.98)
-test tests::u64_insert_built_in                  ... bench:     228,473.96 ns/iter (+/- 3,778.64)
-test tests::u64_insert_built_in_without_capacity ... bench:     512,591.70 ns/iter (+/- 12,306.74)
-test tests::u64_insert_indexmap                  ... bench:     218,257.40 ns/iter (+/- 72,881.46)
-test tests::u64_insert_intmap                    ... bench:     101,611.15 ns/iter (+/- 4,536.83)
-test tests::u64_insert_intmap_checked            ... bench:     107,639.17 ns/iter (+/- 1,862.78)
-test tests::u64_insert_intmap_entry              ... bench:      94,155.26 ns/iter (+/- 1,357.05)
-test tests::u64_insert_intmap_without_capacity   ... bench:     766,954.68 ns/iter (+/- 12,577.93)
-test tests::u64_insert_no_op                     ... bench:      90,375.35 ns/iter (+/- 1,144.02)
-test tests::u64_insert_no_op_without_capacity    ... bench:     190,528.64 ns/iter (+/- 5,733.59)
-test tests::u64_resize_intmap                    ... bench:      55,155.88 ns/iter (+/- 648.32)
+basic_bench                              fastest       │ slowest       │ median        │ mean          │ samples │ iters
+├─ u64_get_ahash                         29.57 µs      │ 38.53 µs      │ 29.73 µs      │ 29.88 µs      │ 100     │ 100
+├─ u64_get_brown                         35.66 µs      │ 47.53 µs      │ 35.93 µs      │ 36.24 µs      │ 100     │ 100
+├─ u64_get_built_in                      123.4 µs      │ 133.7 µs      │ 124.3 µs      │ 124.6 µs      │ 100     │ 100
+├─ u64_get_indexmap                      111.9 µs      │ 148.4 µs      │ 112 µs        │ 112.8 µs      │ 100     │ 100
+├─ u64_get_intmap                        34.42 µs      │ 54.78 µs      │ 35.47 µs      │ 36.19 µs      │ 100     │ 100
+├─ u64_get_no_op                         17.38 µs      │ 20.38 µs      │ 17.62 µs      │ 17.7 µs       │ 100     │ 100
+├─ u64_insert_ahash                      64.11 µs      │ 137.8 µs      │ 120 µs        │ 115.3 µs      │ 100     │ 100
+├─ u64_insert_brown                      61.57 µs      │ 103 µs        │ 88.73 µs      │ 85.99 µs      │ 100     │ 100
+├─ u64_insert_built_in                   170.3 µs      │ 231.5 µs      │ 222.8 µs      │ 220.1 µs      │ 100     │ 100
+├─ u64_insert_indexmap                   164.6 µs      │ 186.1 µs      │ 168.1 µs      │ 168.6 µs      │ 100     │ 100
+├─ u64_insert_intmap                     64.91 µs      │ 208.8 µs      │ 65.54 µs      │ 67.49 µs      │ 100     │ 100
+├─ u64_insert_intmap_checked             61.93 µs      │ 215.5 µs      │ 62.42 µs      │ 64.33 µs      │ 100     │ 100
+├─ u64_insert_intmap_entry               71.37 µs      │ 206.9 µs      │ 72.2 µs       │ 73.89 µs      │ 100     │ 100
+├─ u64_insert_no_op                      54.26 µs      │ 102.2 µs      │ 95.23 µs      │ 93.72 µs      │ 100     │ 100
+├─ u64_insert_without_capacity_ahash     155.7 µs      │ 166.2 µs      │ 159 µs        │ 159.2 µs      │ 100     │ 100
+├─ u64_insert_without_capacity_brown     159.3 µs      │ 223.3 µs      │ 214.2 µs      │ 210.8 µs      │ 100     │ 100
+├─ u64_insert_without_capacity_built_in  387.2 µs      │ 521.5 µs      │ 495 µs        │ 487.5 µs      │ 100     │ 100
+├─ u64_insert_without_capacity_intmap    744.4 µs      │ 772.3 µs      │ 752.6 µs      │ 753.8 µs      │ 100     │ 100
+├─ u64_insert_without_capacity_no_op     160.3 µs      │ 178 µs        │ 161.7 µs      │ 164.9 µs      │ 100     │ 100
 ```
 # Breaking Changes
 

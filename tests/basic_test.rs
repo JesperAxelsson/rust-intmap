@@ -589,4 +589,53 @@ mod tests {
         assert_eq!(format!("{:?}", intmap), "{65: \"bar\"}");
         assert!(intmap.contains_key(key));
     }
+
+    #[test]
+    fn eq() {
+        let mut a = IntMap::with_capacity(0);
+        let mut b = IntMap::with_capacity(17);
+        assert_eq!(a, b);
+        a.insert(0, "foo");
+        assert_ne!(a, b);
+        b.insert(0, "foo");
+        assert_eq!(a, b);
+        b.insert(17, "bar");
+        assert_ne!(a, b);
+        a.insert(17, "bar");
+        assert_eq!(a, b);
+        b.insert(13, "baz");
+        assert_ne!(a, b);
+        a.insert(13, "bazz");
+        assert_ne!(a, b);
+        b.insert(13, "bazz");
+        assert_eq!(a, b);
+        a.remove(17);
+        assert_ne!(a, b);
+        b.remove(17);
+        assert_eq!(a, b);
+        a.insert(3, "faz");
+        assert_ne!(a, b);
+        a.insert(2, "foobar");
+        assert_ne!(a, b);
+        b.insert(2, "foobar");
+        assert_ne!(a, b);
+        b.insert(3, "faz");
+        assert_eq!(a, b);
+        for i in 0..1000 {
+            a.insert(i, "foo");
+        }
+        assert_ne!(a, b);
+        for i in 0..1000 {
+            b.insert(i, "foo");
+        }
+        assert_eq!(a, b);
+        for i in 0..1000 {
+            a.remove(i);
+        }
+        assert_ne!(a, b);
+        for i in 0..1000 {
+            b.remove(i);
+        }
+        assert_eq!(a, b);
+    }
 }

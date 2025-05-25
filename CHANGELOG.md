@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [3.1.1] 2025-05-25
+### Changed
+- Improve performance of `PartialEq`
+
 ## [3.1.0] 2025-01-29
 ### Changed
 - Added `or_insert`, `or_insert_with`, `or_insert_with_key` and `or_default` for better match the standard hashmap api

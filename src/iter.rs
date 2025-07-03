@@ -10,6 +10,15 @@ use crate::IntMap;
 
 // ***************** Iter *********************
 
+impl<'a, K: IntKey, V> IntoIterator for &'a IntMap<K, V> {
+    type Item = (K, &'a V);
+    type IntoIter = Iter<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        Iter::new(&self.cache)
+    }
+}
+
 /// An iterator over the entries of a [`IntMap`]
 ///
 /// This struct is created by [`IntMap::iter`].
@@ -35,6 +44,15 @@ impl<'a, K: IntKey, V> Iterator for Iter<'a, K, V> {
 }
 
 // ***************** Iter Mut *********************
+
+impl<'a, K: IntKey, V> IntoIterator for &'a mut IntMap<K, V> {
+    type Item = (K, &'a mut V);
+    type IntoIter = IterMut<'a, K, V>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        IterMut::new(&mut self.cache)
+    }
+}
 
 /// A mutable iterator over the entries of a [`IntMap`].
 ///

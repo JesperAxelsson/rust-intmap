@@ -284,6 +284,28 @@ mod tests {
     }
 
     #[test]
+    fn map_for() {
+        let count = 20_000;
+        let mut map: IntMap<u64, u64> = IntMap::new();
+
+        for i in 0..count {
+            map.insert(i, i);
+        }
+
+        for (k, v) in &map {
+            assert_eq!(k, *v);
+        }
+
+        for (k, v) in &mut map {
+            assert_eq!(k, *v);
+        }
+
+        for (k, v) in map {
+            assert_eq!(k, v);
+        }
+    }
+
+    #[test]
     fn map_drain() {
         let count = 20_000;
         let mut map: IntMap<u64, u64> = IntMap::new();

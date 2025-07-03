@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [3.1.2] 2025-07-03
+### Added
+- Allow to use for on references to IntMap
+
 ## [3.1.1] 2025-05-25
 ### Changed
 - Improve performance of `PartialEq`
